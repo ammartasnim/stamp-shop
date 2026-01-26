@@ -1,58 +1,126 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState } from 'react';
+import { Link, useSearchParams } from 'react-router-dom';
+import News from './other/News';
+import CatalogueMain from './CatalogueMain';
+import CategoryPage from './CategoryPage';
+import StampPage from './StampPage';
 
+function Catalogue({loggedIn, activeSubscription, role}) {
+  const [form, setForm] = useState({ search: '' });
 
-function Catalogue() {
-  const [form, setForm] = React.useState({
-    search: ''
-  });
-  const onSearch = () => {
+  const onSearch = (e) => {
     e.preventDefault();
     alert(`Searching for ${form.search}`);
+  };
+
+  const [searchParams, setSearchParams] = useSearchParams();
+  const selectedCategory = searchParams.get('category');
+  const selectedStamp = searchParams.get('stampId');
+  const selectStamp = (stampId)=>{
+    setSearchParams({ category: selectedCategory, stampId: stampId });
   }
-  const images = import.meta.glob('./images/catalog/*.{jpg,png,gif}', { eager: true });
-  const catimgs = Object.values(images).map(img => img.default);
-  console.log(catimgs);
-  const names = ['Maximum card', 'Annual collection', 'Thematic collections', 'New issues', 'Philatic pack', 'Postage stamps']
+  const selectCategory = (category)=>{
+    setSearchParams(params=>{
+      params.set('category', category);
+      params.delete('stampId');
+      return params;
+    });
+  };
+  const onBacktoCategory=()=>{
+    setSearchParams(params=>{
+      params.set('category', selectedCategory);
+      params.delete('stampId');
+      return params;
+    });
+  }
+  const onBack=()=>{
+    setSearchParams({});
+  };
+
   return (
-    <div className='container mt-5 row'>
-      <div className='col-md-9'>
-        <h2 className='text-center'>Products catalogue</h2>
-        <p className='text-center'>All current stamp issues and philatelic products are shown here by category.</p>
-        <hr />
-        <div className="d-flex flex-wrap justify-content-center gap-4">
-          {catimgs.map((img, index) => (
-            <div className='text-center' key={img} style={{ width: '30%' }}>
-              <img src={img} alt="" height={120} />
-              <h5>{names.sort()[index]}</h5>
-            </div>
-          ))}
-        </div>
+    <div className="bg-slate-50 min-h-screen">
+
+      {/* Centered Header Section */}
+      <div className="pt-10 pb-12 px-6 text-center">
+        <h1 className="text-4xl font-extrabold text-slate-900 mb-4 tracking-tight">Products Catalogue</h1>
+        <p className="text-slate-500 text-lg max-w-2xl mx-auto font-light">
+          Browse our curated collection of Tunisian philatelic issues and postal history.
+        </p>
+        <div className="h-1 bg-blue-600 w-12 mx-auto mt-6"></div>
       </div>
-      <div className='col-md-3'>
-        <div className='container'>
-          <article className='d-flex'>
-            <form onSubmit={onSearch}>
-              <input type="text" className="form-control" value={form.search} onChange={(e) => setForm({ ...form, search: e.target.value })} placeholder='Search...' />
-              <i className="bi bi-search" style={{ position: 'relative', left: '-23px' }}></i>
-              <button className="btn btn-dark mt-2">Search</button>
-            </form>
-          </article>
-          <hr />
-          <article>
-            <h5><Link to="/subscribe">Subscribe</Link></h5>
-            <p>Receive your selected products automatically at the schedule you choose.</p>
-          </article>
-          <hr />
-          <article>
-            <h5>News</h5>
-            <b><Link to="">Annual collection 2024</Link></b>
-            <p>Discover the new annual collection for 2024, featuring exquisite stamps that celebrate our heritage and culture. Available now in our catalogue!</p>
-          </article>
+
+      <div className="max-w-[1400px] mx-auto px-8 pb-20 flex flex-col md:flex-row gap-16">
+
+        {/* Main Content Area */}
+        <div className="flex-1">
+          {!selectedCategory ? (
+            <CatalogueMain onSelectCategory={selectCategory} />
+          ) : !selectedStamp ? (
+            <CategoryPage category={selectedCategory} onSelectStamp={selectStamp} onBack={onBack} />
+          ) : (
+            <StampPage stampId={selectedStamp} onSelectStamp={selectStamp} onBacktoCategory={onBacktoCategory} role={role} />
+          )}
         </div>
+
+        {/* Vertical Divider */}
+        <div className="hidden md:block w-px bg-slate-200 self-stretch"></div>
+
+        {/* Sidebar Area - Sticky enabled */}
+        <div className="w-full md:w-80">
+          <div className="sticky top-8 space-y-12">
+
+            {/* Search Section */}
+            <section>
+              <span className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">Search Stamps</span>
+              <form onSubmit={onSearch} className="relative group">
+                <input
+                  type="text"
+                  className="w-full bg-transparent border-b border-slate-200 py-2 text-sm focus:border-blue-500 outline-none transition-all placeholder:text-slate-300"
+                  value={form.search}
+                  onChange={(e) => setForm({ ...form, search: e.target.value })}
+                  placeholder='Search stamps...'
+                />
+                <button type="submit" className="absolute right-0 top-1/2 -translate-y-1/2 text-slate-300 group-hover:text-blue-600 transition-colors">
+                  <i className="bi bi-search text-lg"></i>
+                </button>
+              </form>
+            </section>
+
+            {/* ENHANCED ATTRACTIVE SUBSCRIBE SECTION */}
+            <section className="relative overflow-hidden bg-slate-100 border border-slate-100 rounded-3xl p-4">
+              {/* Background Decoration */}
+              <div className="relative z-10">
+                <div className='flex items-center gap-3'>
+                  <div className="w-10 h-10 bg-blue-600 text-white rounded-xl flex items-center justify-center mb-3 shadow-lg shadow-blue-200 transition-transform ">
+                    <i className="bi bi-mailbox2 text-xl"></i>
+                  </div>
+                  <span className="text-[10px] font-black text-blue-600 uppercase tracking-[0.2em] mb-3 block">Collector's Club</span>
+                </div>
+                <h5 className="text-xl font-bold text-slate-900 mb-3 leading-tight">Never miss a new release again.</h5>
+                <p className="text-slate-500 text-sm font-light leading-relaxed mb-3">
+                  Get the latest Tunisian stamps delivered directly to your door based on your favorite themes.
+                </p>
+
+                {(loggedIn && activeSubscription) ? (
+                  <div></div>
+                  ):(
+                  <Link to="/subscribe"
+                  className="inline-flex items-center justify-center w-full py-3 px-6 bg-blue-600 text-white text-[11px] font-bold uppercase tracking-widest rounded-xl hover:bg-blue-700 transition-all shadow-lg active:scale-[0.98]"
+                >Join the Circle</Link>
+                  )
+                }
+              </div>
+            </section>
+
+            {/* News Section */}
+            <News />
+
+          </div>
+        </div>
+
       </div>
     </div>
-  )
+  );
 }
 
-export default Catalogue
+export default Catalogue;
