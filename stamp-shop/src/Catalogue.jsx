@@ -4,28 +4,20 @@ import News from './other/News';
 import CatalogueMain from './CatalogueMain';
 import CategoryPage from './CategoryPage';
 import StampPage from './StampPage';
-import SearchPage from './SearchPage';
 
 function Catalogue({loggedIn, activeSubscription, role}) {
   const [form, setForm] = useState({ search: '' });
 
   const onSearch = (e) => {
     e.preventDefault();
-    setSearchParams(params=>{
-      params.set('query', form.search.trim());
-      params.delete('category');
-      params.delete('stampId');
-      return params;
-    });
-    setForm({ search: '' });
+    alert(`Searching for ${form.search}`);
   };
 
   const [searchParams, setSearchParams] = useSearchParams();
   const selectedCategory = searchParams.get('category');
   const selectedStamp = searchParams.get('stampId');
-  const query = searchParams.get('query');
   const selectStamp = (stampId)=>{
-    setSearchParams({ category: selectedCategory, stampId: stampId, query: null });
+    setSearchParams({ category: selectedCategory, stampId: stampId });
   }
   const selectCategory = (category)=>{
     setSearchParams(params=>{
@@ -38,7 +30,6 @@ function Catalogue({loggedIn, activeSubscription, role}) {
     setSearchParams(params=>{
       params.set('category', selectedCategory);
       params.delete('stampId');
-      params.delete('query');
       return params;
     });
   }
@@ -62,12 +53,10 @@ function Catalogue({loggedIn, activeSubscription, role}) {
 
         {/* Main Content Area */}
         <div className="flex-1">
-          {!selectedCategory && !query ? (
+          {!selectedCategory ? (
             <CatalogueMain onSelectCategory={selectCategory} />
-          ) : !selectedStamp && !query ? (
+          ) : !selectedStamp ? (
             <CategoryPage category={selectedCategory} onSelectStamp={selectStamp} onBack={onBack} />
-          ) : query ? (
-            <SearchPage query={query} onSelectStamp={selectStamp} onBack={onBack}/>
           ) : (
             <StampPage stampId={selectedStamp} onSelectStamp={selectStamp} onBacktoCategory={onBacktoCategory} role={role} />
           )}

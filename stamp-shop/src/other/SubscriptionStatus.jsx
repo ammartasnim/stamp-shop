@@ -49,11 +49,11 @@ function SubscriptionStatus({ setSubscribed }) {
   };
 
   return (
-    <div className="max-w-5xl mx-auto py-6 px-6 animate-in fade-in duration-700">
-      {/* <div className="mb-10">
+    <div className="max-w-5xl mx-auto py-12 px-6 animate-in fade-in duration-700">
+      <div className="mb-10">
         <h1 className="text-3xl font-black text-slate-900 tracking-tight">My Philately Plan</h1>
         <p className="text-slate-500 mt-2">View your automated stamp subscription details and delivery preferences.</p>
-      </div> */}
+      </div>
 
       <div className="grid lg:grid-cols-3 gap-8 items-start">
 
@@ -129,11 +129,9 @@ function SubscriptionStatus({ setSubscribed }) {
             <p className="text-slate-400 text-xs leading-relaxed mb-6">
               To change your delivery frequency or update your preferred categories, please reach out to our philatelic agents.
             </p>
-            <div className='flex justify-center'>
-              <Link to='/contact' className=" py-4 px-4 bg-white/10 hover:bg-white/20 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all">
+            <button className="w-full py-4 bg-white/10 hover:bg-white/20 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all">
               Message Support
-            </Link>
-            </div>
+            </button>
           </div>
 
           {/* New Danger Zone Box (Replaced Official Partner) */}

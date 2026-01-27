@@ -27,9 +27,6 @@ function AdminDash() {
           <NavLink to="subscriptions" className={({isActive})=>`${link} ${isActive ? active : inactive}`}>
             <i className="bi bi-people-fill"></i> Subscriptions
           </NavLink>
-           <NavLink to="orderdash" className={({isActive})=>`${link} ${isActive ? active : inactive}`}>
-            <i className="bi bi-bag-fill"></i> Orders
-          </NavLink>
         </nav>
       </aside>
 

@@ -11,7 +11,6 @@ router.post('/',auth,role('admin'), upload.single('image'), stampController.crea
 router.patch('/:id',auth,role('admin'), stampController.archiveStamp);
 router.patch('/unarchive/:id',auth,role('admin'), stampController.unarchiveStamp);
 router.get('/category', stampController.getStampsByCategory);
-router.get('/search',stampController.searchStamps);
 router.get('/:id', stampController.getStampById);
 router.get('/', stampController.getAllStamps);
 

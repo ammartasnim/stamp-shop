@@ -60,7 +60,7 @@ function Signup({ setLoggedIn }) {
     }
 
     try {
-      const res = await fetch('/api/users/signup', {
+      const res = await fetch('http://localhost:5000/api/users/signup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(form)

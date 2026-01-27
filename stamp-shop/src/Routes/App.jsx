@@ -12,14 +12,11 @@ import Login from '../loginsignup/Login';
 import Signup from '../loginsignup/Signup';
 import Cart from '../Cart';
 import Subscribe from '../other/Subscribe';
-import SubscriptionStatus from '../profile/SubscriptionStatus';
+import SubscriptionStatus from '../other/SubscriptionStatus';
 import Resetpassword from '../loginsignup/Resetpassword';
 import Printing from '../other/Printing';
 import News from '../other/News';
 import Checkout from '../Checkout';
-import Profile from '../profile/Profile';
-import PersonalInfo from '../profile/PersonalInfo';
-import OrderHistory from '../profile/OrderHistory';
 import UserRoute from './UserRoute';
 import AdminRoute from './AdminRoute';
 import AdminDash from '../admin/AdminDash';
@@ -27,7 +24,6 @@ import StampDash from '../admin/StampDash';
 import StampForm from '../admin/StampForm';
 import ContactInbox from '../admin/ContactInbox';
 import Subscriptions from '../admin/Subscriptions';
-import OrderDash from '../admin/OrderDash';
 import Error404 from '../other/Error404';
 import { jwtDecode } from 'jwt-decode';
 import { Navigate } from 'react-router-dom';
@@ -74,8 +70,8 @@ function App() {
       <Router>
         <Navbar loggedIn={loggedIn} setLoggedIn={setLoggedIn} role={role} subscribed={subscribed} activeSubscription={activeSubscription} showNewsletter={showNewsletter} setShowNewsletter={setShowNewsletter} />
         <Routes>
-          <Route path="/" element={<Home loggedIn={loggedIn} activeSubscription={activeSubscription} />} />
-          <Route path="/home" element={<Home loggedIn={loggedIn} activeSubscription={activeSubscription} />} />
+          <Route path="/" element={<Home />} />
+          <Route path="/home" element={<Home />} />
           <Route path="/catalogue" element={<Catalogue loggedIn={loggedIn} activeSubscription={activeSubscription} role={role} />} />
           <Route path="/aboutus" element={<Aboutus setShowNewsletter={setShowNewsletter} setSubscribed={setSubscribed} />} />
           <Route path="/FAQ" element={<FAQ />} />
@@ -98,14 +94,6 @@ function App() {
           <Route path="/printing" element={<Printing />}/>
           <Route path="/news" element={<News />} />
           <Route path="/checkout" element={<Checkout />} />
-          <Route element={<UserRoute loggedIn={loggedIn} subscribed={true} />} >
-            <Route path="/profile" element={<Profile />} >
-              <Route index element={<Navigate to="personalinfo" replace />} />
-              <Route path="personalinfo" element={<PersonalInfo />} />
-              <Route path="orderhistory" element={<OrderHistory />} />
-              <Route path="subscription" element={<SubscriptionStatus />} />
-            </Route>
-          </Route>
             <Route element={<AdminRoute role={role} loggedIn={loggedIn} />} >
               <Route path="/admindash" element={<AdminDash />} >
             <Route index element={<Navigate to="stampdash" replace />} />
@@ -113,7 +101,6 @@ function App() {
             <Route path="stampform" element={<StampForm />} />
             <Route path="contactinbox" element={<ContactInbox />} />
             <Route path="subscriptions" element={<Subscriptions />} />
-            <Route path="orderdash" element={<OrderDash />} />
             </Route>
             </Route>
           <Route path="*" element={<Error404 />} />
