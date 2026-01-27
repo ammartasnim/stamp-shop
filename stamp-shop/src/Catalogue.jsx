@@ -4,36 +4,61 @@ import News from './other/News';
 import CatalogueMain from './CatalogueMain';
 import CategoryPage from './CategoryPage';
 import StampPage from './StampPage';
+import SearchPage from './SearchPage';
 
-function Catalogue({loggedIn, activeSubscription, role}) {
+function Catalogue({ loggedIn, activeSubscription, role }) {
   const [form, setForm] = useState({ search: '' });
 
   const onSearch = (e) => {
     e.preventDefault();
-    alert(`Searching for ${form.search}`);
+    setSearchParams(params => {
+      params.set('query', form.search.trim());
+      params.delete('category');
+      params.delete('stampId');
+      return params;
+    });
+    setForm({ search: '' });
   };
 
   const [searchParams, setSearchParams] = useSearchParams();
   const selectedCategory = searchParams.get('category');
   const selectedStamp = searchParams.get('stampId');
-  const selectStamp = (stampId)=>{
-    setSearchParams({ category: selectedCategory, stampId: stampId });
-  }
-  const selectCategory = (category)=>{
-    setSearchParams(params=>{
-      params.set('category', category);
-      params.delete('stampId');
+  const query = searchParams.get('query');
+  // const selectStamp = (stampId) => {
+  //   setSearchParams({ category: selectedCategory, stampId: stampId, query: null });
+  // }
+  const selectStamp = (stampId) => {
+    setSearchParams(params => {
+      params.set('stampId', stampId);
+
+      // keep category ONLY if it exists
+      if (selectedCategory) {
+        params.set('category', selectedCategory);
+        params.delete('query');
+      }
+
+      // DO NOT touch query
       return params;
     });
   };
-  const onBacktoCategory=()=>{
-    setSearchParams(params=>{
+
+  const selectCategory = (category) => {
+    setSearchParams(params => {
+      params.set('category', category);
+      params.delete('stampId');
+      params.delete('query');
+      return params;
+    });
+  };
+  const onBacktoCategory = () => {
+    setSearchParams(params => {
       params.set('category', selectedCategory);
       params.delete('stampId');
+      params.delete('query');
       return params;
     });
   }
-  const onBack=()=>{
+  const onBack = () => {
     setSearchParams({});
   };
 
@@ -53,13 +78,61 @@ function Catalogue({loggedIn, activeSubscription, role}) {
 
         {/* Main Content Area */}
         <div className="flex-1">
-          {!selectedCategory ? (
+          {/* {!selectedCategory && !query ? (
             <CatalogueMain onSelectCategory={selectCategory} />
-          ) : !selectedStamp ? (
+          ) : !selectedStamp && !query ? (
             <CategoryPage category={selectedCategory} onSelectStamp={selectStamp} onBack={onBack} />
+          ) : query ? (
+            <SearchPage query={query} onSelectStamp={selectStamp} onBack={onBack}/>
           ) : (
             <StampPage stampId={selectedStamp} onSelectStamp={selectStamp} onBacktoCategory={onBacktoCategory} role={role} />
+          )} */}
+          {/* {query ? (
+            <SearchPage
+              query={query}
+              onSelectStamp={selectStamp}
+              onBack={onBack}
+            />
+          ) : !selectedCategory ? (
+            <CatalogueMain onSelectCategory={selectCategory} />
+          ) : !selectedStamp ? (
+            <CategoryPage
+              category={selectedCategory}
+              onSelectStamp={selectStamp}
+              onBack={onBack}
+            />
+          ) : (
+            <StampPage
+              stampId={selectedStamp}
+              onBacktoCategory={onBacktoCategory}
+              role={role}
+            />
+          )} */}
+          {selectedStamp ? (
+            <StampPage
+              stampId={selectedStamp}
+              onSelectStamp={selectStamp} 
+              onBacktoCategory={onBacktoCategory}
+              role={role}
+              onBack={onBack}
+              query={query}
+            />
+          ) : query ? (
+            <SearchPage
+              query={query}
+              onSelectStamp={selectStamp}
+              onBack={onBack}
+            />
+          ) : selectedCategory ? (
+            <CategoryPage
+              category={selectedCategory}
+              onSelectStamp={selectStamp}
+              onBack={onBack}
+            />
+          ) : (
+            <CatalogueMain onSelectCategory={selectCategory} />
           )}
+
         </div>
 
         {/* Vertical Divider */}
@@ -103,11 +176,11 @@ function Catalogue({loggedIn, activeSubscription, role}) {
 
                 {(loggedIn && activeSubscription) ? (
                   <div></div>
-                  ):(
+                ) : (
                   <Link to="/subscribe"
-                  className="inline-flex items-center justify-center w-full py-3 px-6 bg-blue-600 text-white text-[11px] font-bold uppercase tracking-widest rounded-xl hover:bg-blue-700 transition-all shadow-lg active:scale-[0.98]"
-                >Join the Circle</Link>
-                  )
+                    className="inline-flex items-center justify-center w-full py-3 px-6 bg-blue-600 text-white text-[11px] font-bold uppercase tracking-widest rounded-xl hover:bg-blue-700 transition-all shadow-lg active:scale-[0.98]"
+                  >Join the Circle</Link>
+                )
                 }
               </div>
             </section>

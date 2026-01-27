@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useCart } from './CartContext.jsx';
 import toast from 'react-hot-toast';
 
-function StampPage({ stampId, onSelectStamp, onBacktoCategory, role }) {
+function StampPage({ stampId, onSelectStamp, onBacktoCategory, role, onBack, query }) {
   const [showAdminMenu, setShowAdminMenu] = useState(false);
   const [stamp, setStamp] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -30,7 +30,7 @@ setLoading(true);
       fetch(`/api/stamps/category?category=${encodeURIComponent(stamp.category)}`)
       .then((res) => res.json())
       .then((data) => {
-        setRelatedStamps(data.filter(s=>s._id!==stampId));
+        setRelatedStamps(data.filter(s=>s._id!==stampId)).slice(0,4);
         setLoading(false);
       })
       .catch((err) => {
@@ -120,11 +120,11 @@ setLoading(true);
           {/* Top Bar */}
           <div className="flex items-center justify-between mb-12">
             <button
-              onClick={onBacktoCategory}
+              onClick={query?()=>onBack():()=>onBacktoCategory()}
               className="group flex items-center gap-3 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 hover:text-blue-600 transition-all"
             >
               <i className="bi bi-arrow-left text-lg group-hover:-translate-x-1 transition-transform"></i> 
-              Back to Catalogue
+            {query? "Back to Catalogue":"Back to Category"}
             </button>
 
             {role === 'admin' && (

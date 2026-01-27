@@ -11,8 +11,8 @@ const userSchema = new mongoose.Schema({
     email: { type: String, required: true},
     phone: { type: String, required: true },
     fax: String,
-    username: { type: String, required: true, unique: true, lowercase: true },
-    password: { type: String, required: true },
+    username: { type: String, unique: true, lowercase: true },
+    password: { type: String },
     role: { type: String, enum: ['user', 'admin'], default: 'user' },
 }, { timestamps: true });
 
