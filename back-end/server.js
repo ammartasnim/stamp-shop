@@ -19,9 +19,16 @@ app.get('/', (req, res) => {
     res.send('Hello World!');
 });
 
+
+// mongoose.connect(process.env.MONGO_URI)
+// .then(()=>console.log('MongoDB connected'))
+// .catch(err=>console.log('MongoDB connection error:',err));
 mongoose.connect(process.env.MONGO_URI)
-.then(()=>console.log('MongoDB connected'))
-.catch(err=>console.log('MongoDB connection error:',err));
+  .then(() => console.log('MongoDB connected'))
+  .catch(err => console.log('MongoDB connection error:', err));
+
+
+
 
 app.use('/api/users',userRoutes);
 app.use('/api/stamps',stampRoutes);
