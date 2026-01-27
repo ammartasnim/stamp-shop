@@ -94,3 +94,19 @@ exports.unarchiveStamp = async (req, res) => {
         res.status(500).json({ error: err.message });
     }
 }
+
+exports.searchStamps=async(req,res)=>{
+    try{
+        const { query }=req.query;
+        if(!query){
+            return res.status(400).json({ error: 'Query parameter is required' });}
+        console.log('Search query:', query);
+        const stamps = await Stamp.find({
+            name: { $regex: query, $options: 'i' },
+            isArchived: false
+        })
+        res.status(200).json(stamps);
+    }catch(err){
+        res.status(500).json({ error: err.message });
+    }
+}

@@ -5,6 +5,8 @@ import 'bootstrap/dist/js/bootstrap.bundle.min.js';
 import NewsletterBar from "./NewsletterBar";
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
+import { useState, useRef, useEffect } from "react";
+
 
 function Navbar({ loggedIn, setLoggedIn, role, subscribed, activeSubscription, showNewsletter, setShowNewsletter }) {
   const navigate=useNavigate();
@@ -16,6 +18,26 @@ function Navbar({ loggedIn, setLoggedIn, role, subscribed, activeSubscription, s
     toast.success("Logout successful!");
   }
   const navLinkClass = "text-slate-500 no-underline text-[1.0rem] font-medium pb-0.5 border-b-2 border-transparent transition-all duration-200 hover:text-slate-900 hover:border-slate-900";
+  const [openCart, setOpenCart] = useState(false);
+  const dropdownRef=useRef(null);
+  useEffect(()=>{
+    const onClickOutside=(e)=>{
+      if(dropdownRef.current && !dropdownRef.current.contains(e.target)){
+        setOpenCart(false);
+      }
+    };
+    if(openCart){
+      document.addEventListener("mousedown", onClickOutside);
+    }
+    return ()=>{
+      document.removeEventListener("mousedown", onClickOutside);
+    }
+  },[openCart]);
+  const username="John Doe"; // Replace with actual username logic
+  const getUserInitials = () => {
+    if (!username) return "U";
+    return username.charAt(0).toUpperCase();
+  };
 
   return (
     <>
@@ -44,39 +66,63 @@ function Navbar({ loggedIn, setLoggedIn, role, subscribed, activeSubscription, s
 
           <div className="flex items-center gap-6">
             {role=='admin' &&
-                          <Link to="/admindash" className="flex items-center gap-1.5 px-3 py-2 border text-gray-300 text-sm font-semibold rounded-md hover:bg-gray-300 hover:text-white transition-all active:scale-95">Dashboard</Link>
-            }
-            {(activeSubscription && loggedIn) || (subscribed && loggedIn) ?(
-              <Link to="/subscription" className="flex items-center gap-1.5 px-3 py-2 border text-gray-300 text-sm font-semibold rounded-md hover:bg-gray-300 hover:text-white transition-all active:scale-95">Subscription</Link>
-            ):loggedIn ? (
-              <Link to="/subscribe" className="flex items-center gap-1.5 px-3 py-2 border text-gray-300 text-sm font-semibold rounded-md hover:bg-gray-300 hover:text-white transition-all active:scale-95">Subscribe</Link>
-            ) : (null)
-            }
-            {/* Login Button */}
+            <Link 
+                  to="/admindash" 
+                  className="flex items-center gap-1.5 px-3 py-2 text-slate-600 text-sm font-medium rounded-md hover:bg-gray-100 hover:text-gray-600 transition-all border border-transparent hover:border-gray-200"
+                >
+                  <i className="bi bi-speedometer2"></i>
+                  <span className="hidden sm:inline">Dashboard</span>
+                </Link> }
             {!loggedIn ? (
-              <Link to="/login" className="flex items-center gap-1.5 px-3 py-2 bg-blue-600 text-white text-sm font-semibold rounded-md hover:bg-blue-700 shadow-sm transition-all active:scale-95">
-              <i className="bi bi-person"></i>
-              <span>Login</span>
-            </Link>):(
-              <button onClick={logout} className="flex items-center gap-1.5 px-3 py-2 border text-gray-300 text-sm font-semibold rounded-md hover:bg-gray-300 hover:text-white transition-all active:scale-95">Logout</button>
+              <Link 
+                to="/login" 
+                className="flex items-center gap-1.5 px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded-md hover:bg-blue-700 shadow-sm transition-all active:scale-95"
+              >
+                <i className="bi bi-person"></i>
+                <span>Login</span>
+              </Link>
+            ) : (
+              <>
+                {/* Profile Button */}
+                <Link 
+                  to="/profile" 
+                  className="flex items-center gap-1.5 px-3 py-2 text-slate-600 text-sm font-medium rounded-md hover:bg-gray-100 hover:text-gray-600 transition-all border border-transparent hover:border-gray-200"
+                >
+                  <div className="w-5 h-5 bg-gradient-to-br from-blue-600 to-blue-700 rounded-full flex items-center justify-center text-white text-xs font-bold shadow-sm">
+                    {getUserInitials()}
+                  </div>
+                  <span className="hidden sm:inline">Profile</span>
+                </Link>
+
+                {/* Logout Button */}
+                <button 
+                  onClick={logout} 
+                  className="flex items-center gap-1.5 px-3 py-2 text-slate-600 text-sm font-medium rounded-md hover:bg-red-50 hover:text-red-600 transition-all border border-transparent hover:border-red-200"
+                >
+                  <i className="bi bi-box-arrow-right"></i>
+                  <span className="hidden sm:inline">Logout</span>
+                </button>
+              </>
             )}
 
             {/* Cart Dropdown */}
-            <div className="relative">
+            <div className="relative" ref={dropdownRef}>
               <button
                 className="flex items-center gap-2 font-bold text-blue-600 border-none transition-all hover:text-blue-500 active:scale-90"
-                id="cartbtn"
-                data-bs-toggle="dropdown"
-                aria-expanded="false"
+                onClick={(e)=>{
+                  e.stopPropagation();
+                  setOpenCart((prev)=>!prev);
+                }}
               >
                 <i className="bi bi-cart text-xl"></i>
               </button>
-
-              <div className="dropdown-menu dropdown-menu-end p-0 mt-3 border border-slate-200 rounded-xl shadow-2xl min-w-[350px] overflow-hidden">
+              {openCart && (
+                <div onClick={(e)=>e.stopPropagation()} className="absolute right-0 mt-3 border border-slate-200 rounded-xl shadow-2xl min-w-[350px] overflow-hidden bg-white z-50">
                 <div className="p-1 bg-white">
                   <Cart />
                 </div>
               </div>
+              )}
             </div>
           </div>
         </div>

@@ -1,9 +1,21 @@
 const Order = require('../models/Order');
 const Stamp = require('../models/Stamp');
+const jwt = require('jsonwebtoken');
 
 exports.createOrder=async(req,res)=>{
     try{
         const { customer, items, paymentMethod } = req.body;
+        let userId=null;
+        const authHeader = req.headers.authorization;
+        if (authHeader && authHeader.startsWith('Bearer ')) {
+            const token = authHeader.split(' ')[1];
+            try {
+                const decoded = jwt.verify(token, process.env.JWT_SECRET);
+                userId = decoded.userId;
+            } catch (err) {
+            console.log('Invalid token:', err.message);
+            }
+        }
         if(!items || items.length==0){
             return res.status(400).json({message:'Order must contain at least one item'});
         }
@@ -22,7 +34,7 @@ exports.createOrder=async(req,res)=>{
             });
         }
         const order= new Order({
-            user:req.user?.id, customer, items: orderItems, totalPrice, paymentMethod, status: paymentMethod=="E-dinar" ? 'Pending':'Created'
+            user:userId, customer, items: orderItems, totalPrice, paymentMethod, status: paymentMethod=="E-dinar" ? 'Pending':'Created'
         });
         await order.save();
         res.status(201).json(order);
@@ -53,7 +65,7 @@ exports.cancelOrder=async(req,res)=>{
 
 exports.getMyOrders=async(req,res)=>{
     try{
-        const orders=await Order.find({user:req.user.id}).sort({createdAt:-1});
+        const orders=await Order.find({user:req.user.userId}).sort({createdAt:-1});
         res.json(orders);
     }catch(err){
         res.status(500).json({error:err.message});
@@ -77,7 +89,7 @@ exports.getOrderById=async(req,res)=>{
 
 exports.getAllOrders=async(req,res)=>{
     try{
-        const orders=await Order.find().sort({createdAt:-1});
+        const orders=await Order.find().populate('items.product').sort({createdAt:-1});
         res.json(orders);
     }catch(err){
         res.status(500).json({error:err.message});

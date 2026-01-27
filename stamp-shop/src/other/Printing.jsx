@@ -6,9 +6,13 @@ function PrintingWorks() {
     const contactLabel = "text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1";
 
     return (
-        <div className="bg-slate-50 min-h-screen py-12 px-6">
+        <div className="bg-slate-50 min-h-screen py-10 px-6">
             <div className="max-w-[1100px] mx-auto">
-
+              <Link to='/home'
+              className="group flex mb-3 items-center gap-3 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 hover:text-blue-600 transition-all">
+              <i className="bi bi-arrow-left text-lg group-hover:-translate-x-1 transition-transform"></i> 
+              Back to Home
+            </Link>
                 {/* Compact Header */}
                 <div className="mb-12 border-b border-slate-200 pb-8 flex flex-col md:flex-row justify-between items-end gap-6">
                     <div className="max-w-xl">

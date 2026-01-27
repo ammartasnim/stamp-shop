@@ -186,7 +186,7 @@ setLoading(true);
         )}
       </div>
       <div className="mt-6 px-4 flex justify-between items-center text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">
-        <span>Total Active Stamps: {stamps.length}</span>
+        <span>Stamps Found: {stamps.length}</span>
         <span>Admin control panel</span>
       </div>
     </div>

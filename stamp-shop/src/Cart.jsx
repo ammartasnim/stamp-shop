@@ -140,6 +140,7 @@ function Cart() {
             <div className="flex flex-col gap-2">
               <Link
                 to="/checkout"
+                state={{ cart }}
                 className="no-underline w-full flex items-center justify-center gap-2 bg-blue-600 text-white py-2 px-4 rounded-md text-xs font-semibold hover:bg-blue-700 transition-all duration-300 shadow-sm active:scale-[0.98]"
               >
                 Checkout
