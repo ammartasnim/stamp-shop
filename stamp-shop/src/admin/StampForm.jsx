@@ -8,48 +8,66 @@ function StampForm() {
     name: '',
     image: null,
     category: '',
-    price: ''
+    price: '',
+    stock: '',
+    issueDate: '',
+    isArchived: false
   });
   const [errors, setErrors] = useState({
-  name: '',
-  image: '',
-  category: '',
-  price: ''
-});
+    name: '',
+    image: '',
+    category: '',
+    price: '',
+    stock: '',
+    issueDate: ''
+  });
 
-const [touched, setTouched] = useState({
-  name: false,
-  image: false,
-  category: false,
-  price: false
-});
-const errorMsgs = (field) => {
-  setTouched({ ...touched, [field]: true });
+  const [touched, setTouched] = useState({
+    name: false,
+    image: false,
+    category: false,
+    price: false,
+    stock: false,
+    issueDate: false
+  });
+
+  const errorMsgs = (field) => {
+    setTouched({ ...touched, [field]: true });
     const newErrors = { ...errors };
 
-  if (field === 'name') {
-    if (!form.name.trim()) newErrors.name = 'Name is required';
-    else if (form.name.length < 3) newErrors.name = 'Name must be at least 3 characters';
-    else newErrors.name = '';
-  }
-  if (field === 'category') {
-    if (!form.category) newErrors.category = 'Category is required';
-    else newErrors.category = '';
-  }
-  if (field === 'price') {
-    if (!form.price) newErrors.price = 'Price is required';
-    else if (Number(form.price) < 0.1) newErrors.price = 'Price must equal or be greater than 0.100';
-    else newErrors.price = '';
-  }
-  if (field === 'image') {
-    if (!form.image) newErrors.image = 'Image is required';
-    else if (!(form.image instanceof File)) newErrors.image = 'Invalid image file';
-    else newErrors.image = '';
-  }
+    if (field === 'name') {
+      if (!form.name.trim()) newErrors.name = 'Name is required';
+      else if (form.name.length < 3) newErrors.name = 'Name must be at least 3 characters';
+      else newErrors.name = '';
+    }
+    if (field === 'category') {
+      if (!form.category) newErrors.category = 'Category is required';
+      else newErrors.category = '';
+    }
+    if (field === 'price') {
+      if (!form.price) newErrors.price = 'Price is required';
+      else if (Number(form.price) < 0.1) newErrors.price = 'Price must equal or be greater than 0.100';
+      else newErrors.price = '';
+    }
+    if (field === 'stock') {
+      if (form.stock === '') newErrors.stock = 'Stock is required';
+      else if (Number(form.stock) < 0) newErrors.stock = 'Stock cannot be negative';
+      else if (!Number.isInteger(Number(form.stock))) newErrors.stock = 'Stock must be a whole number';
+      else newErrors.stock = '';
+    }
+    if (field === 'issueDate') {
+      if (form.issueDate && new Date(form.issueDate) > new Date()) {
+        newErrors.issueDate = 'Issue date cannot be in the future';
+      } else newErrors.issueDate = '';
+    }
+    if (field === 'image') {
+      if (!form.image) newErrors.image = 'Image is required';
+      else if (!(form.image instanceof File)) newErrors.image = 'Invalid image file';
+      else newErrors.image = '';
+    }
 
-  setErrors(newErrors);
-};
-
+    setErrors(newErrors);
+  };
 
   const labelClass = "block text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mb-3";
   const inputClass = "w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all placeholder:text-slate-300";
@@ -67,6 +85,9 @@ const errorMsgs = (field) => {
     formData.append('image', form.image);
     formData.append('category', form.category);
     formData.append('price', form.price);
+    formData.append('stock', form.stock);
+    if (form.issueDate) formData.append('issueDate', form.issueDate);
+    formData.append('isArchived', form.isArchived);
     
     try {
       const token = localStorage.getItem('token') || sessionStorage.getItem('token');
@@ -77,20 +98,31 @@ const errorMsgs = (field) => {
       });
       if (res.ok) {
         toast.success('Stamp added successfully!');
-        setForm({ name: '', image: null, category: '', price: '' });
+        setForm({ 
+          name: '', 
+          image: null, 
+          category: '', 
+          price: '',
+          stock: '',
+          issueDate: '',
+          isArchived: false
+        });
         setTouched({
-        name: false,
-        image: false,
-        category: false,
-        price: false
-      });
+          name: false,
+          image: false,
+          category: false,
+          price: false,
+          stock: false,
+          issueDate: false
+        });
         setErrors({
-        name: '',
-        image: '',
-        category: '',
-        price: ''
-      });
-
+          name: '',
+          image: '',
+          category: '',
+          price: '',
+          stock: '',
+          issueDate: ''
+        });
       }
       else{
         const data = await res.json();
@@ -103,7 +135,13 @@ const errorMsgs = (field) => {
   };
 
   const validForm = () => {
-    return form.name && form.image instanceof File && form.category && parseFloat(form.price) >= 0.1;
+    return form.name && 
+           form.image instanceof File && 
+           form.category && 
+           parseFloat(form.price) >= 0.1 &&
+           form.stock !== '' &&
+           Number(form.stock) >= 0 &&
+           Number.isInteger(Number(form.stock));
   };
 
   return (
@@ -157,7 +195,6 @@ const errorMsgs = (field) => {
                     onChange={(e) => setForm({...form, category: e.target.value})}
                     onBlur={() => errorMsgs("category")}
                   >
-
                     <option value="" disabled>Select Category</option>
                     {categories.map(cat => (
                       <option key={cat} value={cat}>{cat}</option>
@@ -177,11 +214,45 @@ const errorMsgs = (field) => {
                       placeholder="0.750" 
                       value={form.price}
                       onChange={(e) => setForm({...form, price: e.target.value})}
-                      onBlur={() => errorMsgs("price")} />
-                      {errors.price && touched.price && (
-                        <p className="text-red-500 text-xs mt-1">{errors.price}</p>
-                      )}
+                      onBlur={() => errorMsgs("price")} 
+                    />
+                    {errors.price && touched.price && (
+                      <p className="text-red-500 text-xs mt-1">{errors.price}</p>
+                    )}
                   </div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-6">
+                <div>
+                  <label className={labelClass}>Stock Quantity *</label>
+                  <input 
+                    type="number" 
+                    step="1"
+                    min="0"
+                    className={inputClass} 
+                    placeholder="100" 
+                    value={form.stock}
+                    onChange={(e) => setForm({...form, stock: e.target.value})}
+                    onBlur={() => errorMsgs("stock")}
+                  />
+                  {errors.stock && touched.stock && (
+                    <p className="text-red-500 text-xs mt-1">{errors.stock}</p>
+                  )}
+                </div>
+                <div>
+                  <label className={labelClass}>Issue Date</label>
+                  <input 
+                    type="date" 
+                    className={inputClass} 
+                    value={form.issueDate}
+                    onChange={(e) => setForm({...form, issueDate: e.target.value})}
+                    onBlur={() => errorMsgs("issueDate")}
+                    max={new Date().toISOString().split('T')[0]}
+                  />
+                  {errors.issueDate && touched.issueDate && (
+                    <p className="text-red-500 text-xs mt-1">{errors.issueDate}</p>
+                  )}
                 </div>
               </div>
 
@@ -211,6 +282,19 @@ const errorMsgs = (field) => {
                     <p className="text-red-500 text-xs mt-1">{errors.image}</p>
                   )}
                 </div>
+              </div>
+
+              <div className="flex items-center gap-3 p-4 bg-slate-50 rounded-xl border border-slate-200">
+                <input 
+                  type="checkbox" 
+                  id="isArchived"
+                  checked={form.isArchived}
+                  onChange={(e) => setForm({...form, isArchived: e.target.checked})}
+                  className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
+                />
+                <label htmlFor="isArchived" className="text-sm text-slate-600 cursor-pointer">
+                  Mark as archived (not available for purchase)
+                </label>
               </div>
             </div>
 

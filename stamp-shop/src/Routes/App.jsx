@@ -25,6 +25,7 @@ import AdminRoute from './AdminRoute';
 import AdminDash from '../admin/AdminDash';
 import StampDash from '../admin/StampDash';
 import StampForm from '../admin/StampForm';
+import UserDash from '../admin/UserDash';
 import ContactInbox from '../admin/ContactInbox';
 import Subscriptions from '../admin/Subscriptions';
 import OrderDash from '../admin/OrderDash';
@@ -111,6 +112,7 @@ function App() {
             <Route index element={<Navigate to="stampdash" replace />} />
             <Route path="stampdash" element={<StampDash />} />
             <Route path="stampform" element={<StampForm />} />
+            <Route path="userdash" element={<UserDash />} />
             <Route path="contactinbox" element={<ContactInbox />} />
             <Route path="subscriptions" element={<Subscriptions />} />
             <Route path="orderdash" element={<OrderDash />} />

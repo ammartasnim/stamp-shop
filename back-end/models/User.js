@@ -13,7 +13,8 @@ const userSchema = new mongoose.Schema({
     fax: String,
     username: { type: String, unique: true, lowercase: true },
     password: { type: String },
-    role: { type: String, enum: ['user', 'admin'], default: 'user' },
+    role: { type: String, enum: ['user', 'guest', 'admin'], default: 'user' },
+    isSubscribed: { type: Boolean, default: false }
 }, { timestamps: true });
 
 module.exports = mongoose.model('User', userSchema);

@@ -2,7 +2,7 @@ const Stamp = require('../models/Stamp');
 
 exports.getAllStamps=async(req,res)=>{
     try{
-        const stamps=await Stamp.find();
+        const stamps=await Stamp.find().sort({ createdAt: -1 });
         res.status(200).json(stamps);
     }catch(err){
         res.status(500).json({ error: err.message });
@@ -40,7 +40,7 @@ exports.createStamp = async (req, res) => {
     console.log('req.file:', req.file);
     console.log('req.body:', req.body);
     try {
-        const { name, category, price } = req.body;
+        const { name, category, price, stock, issueDate, isArchived } = req.body;
         if(!req.file){
             return res.status(400).json({ error: 'Image file is required' });
         }
@@ -48,7 +48,9 @@ exports.createStamp = async (req, res) => {
         if (existingStamp){
             return res.status(409).json({ error: 'Stamp already exists' });
         }
-        const stamp=await Stamp.create({name, image: req.file.filename, category, price});
+        const stamp=await Stamp.create({name, image: req.file.filename, category, price:parseFloat(price), stock:parseInt(stock) || 0, issueDate:issueDate || null, isArchived: isArchived === 'true'
+
+        });
         res.status(201).json({ message: 'Stamp created', stamp });
     } catch(err){
         res.status(400).json({ error: err.message });
@@ -65,35 +67,36 @@ exports.deleteStamp = async (req, res) => {
     }
 }
 
-exports.archiveStamp = async (req, res) => {
+exports.setArchiveStatus = async (req, res) => {
     try{
         const id = req.params.id;
+        const { archive } =req.query
         const stamp = await Stamp.findById(id);
         if(!stamp){
             return res.status(404).json({ error: 'Stamp not found' });
         }
-        stamp.isArchived = true;
+        stamp.isArchived = archive === 'true';
         await stamp.save();
-        res.status(200).json({ message: 'Stamp archived', stamp });
+        res.status(200).json({ message: `Stamp ${stamp.isArchived ? 'archived' : 'unarchived'}`, stamp });
     }catch(err){
         res.status(500).json({ error: err.message });
     }
 }
 
-exports.unarchiveStamp = async (req, res) => {
-    try{
-        const id = req.params.id;
-        const stamp = await Stamp.findById(id);
-        if(!stamp){
-            return res.status(404).json({ error: 'Stamp not found' });
-        }
-        stamp.isArchived = false;
-        await stamp.save();
-        res.status(200).json({ message: 'Stamp unarchived', stamp });
-    }catch(err){
-        res.status(500).json({ error: err.message });
-    }
-}
+// exports.unarchiveStamp = async (req, res) => {
+//     try{
+//         const id = req.params.id;
+//         const stamp = await Stamp.findById(id);
+//         if(!stamp){
+//             return res.status(404).json({ error: 'Stamp not found' });
+//         }
+//         stamp.isArchived = false;
+//         await stamp.save();
+//         res.status(200).json({ message: 'Stamp unarchived', stamp });
+//     }catch(err){
+//         res.status(500).json({ error: err.message });
+//     }
+// }
 
 exports.searchStamps=async(req,res)=>{
     try{
@@ -110,3 +113,31 @@ exports.searchStamps=async(req,res)=>{
         res.status(500).json({ error: err.message });
     }
 }
+
+exports.updateStock = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { stock, adjustment } = req.body;
+
+        const stamp = await Stamp.findById(id);
+        if (!stamp) {
+            return res.status(404).json({ message: 'Stamp not found' });
+        }
+
+        if (stock !== undefined) {
+            // Set absolute stock
+            stamp.stock = parseInt(stock);
+        } else if (adjustment !== undefined) {
+            // Adjust current stock (e.g., -1 for a sale)
+            stamp.stock += parseInt(adjustment);
+        }
+
+        // Prevent negative stock
+        if (stamp.stock < 0) stamp.stock = 0;
+
+        await stamp.save();
+        res.status(200).json({ message: 'Stock updated successfully', stock: stamp.stock });
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+};

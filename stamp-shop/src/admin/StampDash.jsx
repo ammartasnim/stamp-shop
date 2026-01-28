@@ -8,174 +8,191 @@ function StampDash() {
   const token = localStorage.getItem('token') || sessionStorage.getItem('token');
 
   const fetchStamps = async () => {
-setLoading(true);
-    fetch("/api/stamps")
-      .then((res) => res.json())
-      .then((data) => {
-        setStamps(data);
-        setLoading(false);
-      })
-      .catch((err) => {
-        console.error(err);
-        setLoading(false);
-      })
-  }
+    setLoading(true);
+    try {
+      const res = await fetch("/api/stamps");
+      const data = await res.json();
+      // Add a 'tempStock' property to each stamp to handle local input changes
+      const stampsWithInput = data.map(s => ({ ...s, tempStock: s.stock }));
+      setStamps(stampsWithInput);
+    } catch (err) {
+      toast.error("Failed to load stamps.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     fetchStamps();
   }, []);
 
-  const onArchive = async (stampId) => {
-    const confirmed = window.confirm(
-      "Are you sure you want to archive this stamp?"
-    );
-    if (!confirmed) return;
+  // Updates the local state as the user types
+  const handleTempStockChange = (id, value) => {
+    setStamps(prev => prev.map(s => 
+      s._id === id ? { ...s, tempStock: value } : s
+    ));
+  };
+
+  // Sends the final number to the backend
+  const onSaveStock = async (id, newStock) => {
+    const stockNum = parseInt(newStock);
+    if (isNaN(stockNum) || stockNum < 0) {
+      toast.error("Please enter a valid positive number");
+      return;
+    }
+
     try {
-      const res = await fetch(`/api/stamps/${stampId}`, {
+      const res = await fetch(`/api/stamps/${id}/stock`, {
         method: 'PATCH',
-        headers: { 'Authorization': 'Bearer ' + token }
-      })
+        headers: { 
+          'Authorization': 'Bearer ' + token,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ stock: stockNum }) // Sending absolute value
+      });
+
+      const data = await res.json();
       if (res.ok) {
-        toast.success("The stamp has been archived.");
-        fetchStamps();
-      }
-      else {
-        const data = await res.json();
-        toast.error("Error: " + data.error);
+        toast.success(`Stock updated to ${stockNum}`);
+        // Update the actual stock to match tempStock
+        setStamps(prev => prev.map(s => 
+          s._id === id ? { ...s, stock: stockNum } : s
+        ));
+      } else {
+        toast.error(data.message || "Failed to update stock");
       }
     } catch (err) {
-      console.error(err);
-      toast.error("An error occurred while archiving the stamp. Please try again later.");
+      toast.error("Network error.");
     }
-  }
-  const onUnarchive = async (stampId) => {
+  };
+
+  const onSetArchiveStatus = async (stampId, isCurrentlyArchived) => {
     try {
-      const res = await fetch(`/api/stamps/unarchive/${stampId}`, {
+      const res = await fetch(`/api/stamps/${stampId}?archive=${!isCurrentlyArchived}`, {
         method: 'PATCH',
         headers: { 'Authorization': 'Bearer ' + token }
-      })
+      });
       if (res.ok) {
-        toast.success("The stamp has been restored.");
+        toast.success(isCurrentlyArchived ? "Restored" : "Archived");
         fetchStamps();
       }
-      else {
-        const data = await res.json();
-        toast.error("Error: " + data.error);
-      }
-    } catch (err) {
-      console.error(err);
-      toast.error("An error occurred while restoring the stamp. Please try again later.");
-    }
-  }
+    } catch (err) { toast.error("Action failed"); }
+  };
+
   const onDelete = async (stampId) => {
-    const confirmed = window.confirm(
-      "Are you sure you want to delete this stamp? This action cannot be undone."
-    );
-    if (!confirmed) return;
+    if (!window.confirm("Delete permanently?")) return;
     try {
       const res = await fetch(`/api/stamps/delete/${stampId}`, {
         method: 'DELETE',
         headers: { 'Authorization': 'Bearer ' + token }
-      })
+      });
       if (res.ok) {
-        toast.success("The stamp has been deleted.");
+        toast.success("Deleted");
         setStamps(stamps.filter(stp => stp._id !== stampId));
       }
-      else {
-        const data = await res.json();
-        toast.error("Error: " + data.error);
-      }
-    } catch (err) {
-      console.error(err);
-      toast.error("An error occurred while deleting the stamp. Please try again later.");
-    }
-  }
+    } catch (err) { toast.error("Error deleting"); }
+  };
 
   return (
     <div className="animate-in fade-in duration-500">
       <header className="flex justify-between items-center mb-10">
         <div>
           <h2 className="text-3xl font-extrabold text-slate-900 tracking-tight">Catalogue Management</h2>
-          <p className="text-slate-500 text-sm mt-1">Review, update, and archive your stamp catalogue.</p>
+          <p className="text-slate-500 text-sm mt-1 font-light">Inventory and Issue Date control.</p>
         </div>
         <Link to="/admindash/stampform" className="px-6 py-3 bg-slate-900 text-white rounded-xl text-xs font-bold uppercase tracking-widest hover:bg-blue-600 transition-all shadow-xl shadow-slate-200">
           <i className="bi bi-plus-lg mr-2"></i> New Stamp
         </Link>
       </header>
 
-      {/* Unified Table Style */}
-      <div className="bg-white border border-slate-200 rounded-[2rem] shadow-sm overflow-hidden">
-
+      <div className="bg-white border border-slate-200 rounded-[2.5rem] shadow-sm overflow-hidden">
         {loading ? (
           <div className="flex flex-col items-center justify-center py-24 text-slate-300">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mb-4"></div>
-            <p className="text-xs uppercase font-bold tracking-widest">Loading Stamps...</p>
+            <p className="text-xs uppercase font-bold tracking-widest">Loading...</p>
           </div>
-        ) : stamps.length == 0 ? (
-          <div className="text-center py-24 bg-slate-50 rounded-3xl border border-dashed border-slate-200">
-            <i className="bi bi-search text-4xl text-slate-200 mb-4 block"></i>
-            <p className="text-slate-500 font-light">No stamps found.</p>
-          </div>) : (
+        ) : (
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-slate-50/50 border-b border-slate-200">
-                <th className="px-8 py-5 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Stamp name</th>
+                <th className="px-8 py-5 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Stamp & Issue Date</th>
                 <th className="px-8 py-5 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Category</th>
-                <th className="px-8 py-5 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Price</th>
-                <th className="px-8 py-5 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-right">Management</th>
+                <th className="px-8 py-5 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-center">Manage Stock</th>
+                <th className="px-8 py-5 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-right">Price</th>
+                <th className="px-8 py-5 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-right">Action</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
               {stamps.map((stamp) => (
-                <tr key={stamp.id} className="hover:bg-slate-50/50 transition-colors group">
+                <tr key={stamp._id} className="hover:bg-slate-50/50 transition-colors group">
                   <td className="px-8 py-5">
                     <div className="flex items-center gap-4">
-                      <div className="w-10 h-10 bg-slate-100 rounded-lg flex items-center justify-center">
-                        <i className="bi bi-image text-slate-300"></i>
+                      <div className="w-12 h-12 bg-slate-100 rounded-xl flex items-center justify-center overflow-hidden border border-slate-100">
+                        <img src={`http://localhost:5000/uploads/${stamp.image}`} alt="" className="w-full h-full object-cover" />
                       </div>
-                      <span className="font-bold text-slate-900 text-sm">{stamp.name}</span>
+                      <div>
+                        <div className="font-bold text-slate-900 text-sm mb-1">{stamp.name}</div>
+                        <div className="flex items-center gap-2 text-[10px] font-bold">
+                          <span className="text-slate-400 uppercase tracking-tighter">Issue Date:</span>
+                          <span className="text-blue-500">
+                            {stamp.issueDate ? new Date(stamp.issueDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : 'N/A'}
+                          </span>
+                        </div>
+                      </div>
                     </div>
                   </td>
+
                   <td className="px-8 py-5">
-                    {stamp.isArchived ? (
-                      <span className='px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider bg-amber-50 text-amber-600'>
-                      Archived
-                    </span>
-                    ):(
-                      <span className='px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider bg-slate-100 text-slate-500'>
+                    <span className={`px-2 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider bg-slate-100 text-slate-500`}>
                       {stamp.category}
                     </span>
-                    )}
+                    <div>
+                    {stamp.isArchived && (
+                      <span className={`px-2 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider bg-amber-50 text-amber-600`}>
+                      Archived
+                    </span>)}
+                    </div>
                   </td>
+
                   <td className="px-8 py-5">
-                    <div className="flex items-baseline gap-1">
-                      <span className="font-bold text-slate-900 text-sm">{parseFloat(stamp.price).toFixed(3)}</span>
+                    <div className="flex items-center justify-center gap-2">
+                      <input 
+                        type="number"
+                        value={stamp.tempStock}
+                        onChange={(e) => handleTempStockChange(stamp._id, e.target.value)}
+                        className={`w-20 bg-slate-50 border ${stamp.stock !== parseInt(stamp.tempStock) ? 'border-blue-400 ring-1 ring-blue-100' : 'border-slate-200'} rounded-lg px-2 py-1.5 text-xs font-bold text-slate-700 outline-none transition-all`}
+                      />
+                      {/* Only show "Save" button if the value has changed from the original stock */}
+                      <button 
+                        onClick={() => onSaveStock(stamp._id, stamp.tempStock)}
+                        disabled={stamp.stock === parseInt(stamp.tempStock)}
+                        className={`p-1.5 rounded-lg transition-all ${stamp.stock !== parseInt(stamp.tempStock) ? 'bg-blue-600 text-white shadow-md' : 'bg-slate-100 text-slate-300 opacity-50 cursor-not-allowed'}`}
+                      >
+                        <i className="bi bi-check-lg"></i>
+                      </button>
+                    </div>
+                  </td>
+
+                  <td className="px-8 py-5 text-right">
+                    <div className="flex items-baseline justify-end gap-1">
+                      <span className="font-bold text-slate-900 text-sm">{Number(stamp.price).toFixed(3)}</span>
                       <span className="text-[10px] font-bold text-slate-400">TND</span>
                     </div>
                   </td>
+
                   <td className="px-8 py-5 text-right">
                     <div className="flex justify-end gap-2">
-                      {stamp.isArchived ? (
-                        <button
-                        title="Unarchive stamp"
-                        onClick={() => onUnarchive(stamp._id)}
-                        className="flex items-center justify-center w-10 h-10 rounded-xl bg-slate-50 text-slate-400 hover:bg-blue-50 hover:text-blue-600 border border-slate-100 hover:border-blue-100 transition-all duration-200 shadow-sm"
-                      >
-                        <i className="bi bi-archive-fill text-lg transition-transform"></i>
-                      </button>) : (
-                        <button
-                        title="Archive stamp"
-                        onClick={() => onArchive(stamp._id)}
-                        className="flex items-center justify-center w-10 h-10 rounded-xl bg-slate-50 text-slate-400 hover:bg-blue-50 hover:text-blue-600 border border-slate-100 hover:border-blue-100 transition-all duration-200 shadow-sm"
-                      >
-                        <i className="bi bi-archive-fill text-lg transition-transform"></i>
-                      </button>)}
                       <button
-                        title="Delete stamp"
-                        onClick={() => onDelete(stamp._id)}
-                        className="flex items-center justify-center w-10 h-10 rounded-xl bg-slate-50 text-slate-400 hover:bg-red-50 hover:text-red-600 border border-slate-100 hover:border-red-100 transition-all duration-200 shadow-sm"
+                        onClick={() => onSetArchiveStatus(stamp._id, stamp.isArchived)}
+                        className={`w-9 h-9 rounded-xl border flex items-center justify-center transition-all ${stamp.isArchived ? 'bg-amber-50 border-amber-100 text-amber-600' : 'bg-white border-slate-200 text-slate-400 hover:text-blue-600'}`}
                       >
-                        <i className="bi bi-trash text-lg transition-transform"></i>
+                        <i className={`bi ${stamp.isArchived ? 'bi-archive-fill' : 'bi-archive'}`}></i>
+                      </button>
+                      <button
+                        onClick={() => onDelete(stamp._id)}
+                        className="w-9 h-9 rounded-xl bg-white border border-slate-200 text-slate-400 hover:text-red-600 hover:border-red-100 flex items-center justify-center transition-all"
+                      >
+                        <i className="bi bi-trash"></i>
                       </button>
                     </div>
                   </td>
@@ -184,10 +201,6 @@ setLoading(true);
             </tbody>
           </table>
         )}
-      </div>
-      <div className="mt-6 px-4 flex justify-between items-center text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">
-        <span>Stamps Found: {stamps.length}</span>
-        <span>Admin control panel</span>
       </div>
     </div>
   );

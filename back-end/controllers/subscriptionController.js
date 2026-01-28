@@ -1,8 +1,9 @@
 const Subscription = require('../models/Subscription');
+const User = require('../models/User');
 
 exports.subscribe = async (req, res) => {
     try {
-        const { type, frequency, mode, products } = req.body;
+        const { type, frequency, mode, products, fund } = req.body;
 
         if (!type || !frequency || !mode) {
             return res.status(400).json({ error: 'Missing required fields' });
@@ -14,7 +15,8 @@ exports.subscribe = async (req, res) => {
         if(exists){
             return res.status(409).json({ error: 'User already subscribed' });
         }
-        const subscription = new Subscription({ type, frequency, mode, products, userId: req.user.userId });
+        const subscription = new Subscription({ type, frequency, mode, products, fund, userId: req.user.userId });
+        await User.findByIdAndUpdate(req.user.userId, { isSubscribed: true });
         await subscription.save();
         res.status(201).json({ message: 'Subscription created', subscription });
     } catch (err) {
@@ -34,13 +36,14 @@ exports.unsubscribe = async (req, res) => {
         }
         subscription.active = false;
         await subscription.save();
+        await User.findByIdAndUpdate(subscription.userId, { isSubscribed: false });
         res.status(200).json({ message: 'Unsubscribed successfully' });
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
 }
 
-exports.delete = async (req, res) => {
+exports.deleteSubscription = async (req, res) => {
     try {
         const subscriptionId = req.params.id;
         const subscription = await Subscription.findById(subscriptionId);
@@ -48,7 +51,8 @@ exports.delete = async (req, res) => {
             return res.status(404).json({ error: 'Subscription not found' });
         }
         await Subscription.findByIdAndDelete(subscriptionId);
-        res.status(200).json({ message: 'Unsubscribed successfully' });
+        await User.findByIdAndUpdate(subscription.userId, { isSubscribed: false });
+        res.status(200).json({ message: 'Subscription deleted successfully' });
     } catch (err) {
         res.status(500).json({ error: err.message });
     }

@@ -1,6 +1,7 @@
 const Order = require('../models/Order');
 const Stamp = require('../models/Stamp');
 const jwt = require('jsonwebtoken');
+const User = require('../models/User');
 
 exports.createOrder=async(req,res)=>{
     try{
@@ -16,6 +17,37 @@ exports.createOrder=async(req,res)=>{
             console.log('Invalid token:', err.message);
             }
         }
+        if (userId) {
+      // 2️⃣ Logged-in user: fetch their info
+      const existingUser = await User.findById(userId);
+
+      if (!existingUser) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+
+     const fieldsToUpdate = ['firstname','lastname','email','phone','country','city','address','postcode'];
+      fieldsToUpdate.forEach(field => {
+        if (customer && customer[field]) existingUser[field] = customer[field];
+      });
+      await existingUser.save();
+    } else {
+            if (!customer) {
+                return res.status(400).json({ message: 'Customer information is required for guest checkout' });
+            }
+            const guestUser = new User({
+            firstname: customer.firstname,
+            lastname: customer.lastname,
+            email: customer.email,
+            phone: customer.phone,
+            address: customer.address,
+            postcode: customer.postcode,
+            city: customer.city,
+            country: customer.country,
+            role: 'guest'
+      });
+      await guestUser.save();
+      userId = guestUser._id;
+    }
         if(!items || items.length==0){
             return res.status(400).json({message:'Order must contain at least one item'});
         }
@@ -34,7 +66,7 @@ exports.createOrder=async(req,res)=>{
             });
         }
         const order= new Order({
-            user:userId, customer, items: orderItems, totalPrice, paymentMethod, status: paymentMethod=="E-dinar" ? 'Pending':'Created'
+            user:userId, items: orderItems, totalPrice, paymentMethod, status: paymentMethod=="E-dinar" ? 'Pending':'Created'
         });
         await order.save();
         res.status(201).json(order);
@@ -89,7 +121,7 @@ exports.getOrderById=async(req,res)=>{
 
 exports.getAllOrders=async(req,res)=>{
     try{
-        const orders=await Order.find().populate('items.product').sort({createdAt:-1});
+        const orders=await Order.find().populate('user').populate('items.product').sort({createdAt:-1});
         res.json(orders);
     }catch(err){
         res.status(500).json({error:err.message});

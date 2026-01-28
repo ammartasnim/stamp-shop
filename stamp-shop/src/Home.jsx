@@ -9,7 +9,7 @@ function Home({ loggedIn, activeSubscription }) {
   const iconStyle = "w-12 h-12 bg-[#FBFBFC] rounded-xl flex items-center justify-center mb-6 border border-slate-50 group-hover:bg-blue-600 group-hover:text-white transition-all duration-500 text-blue-600 shadow-sm";
 
   return (
-    <main className="min-h-screen bg-white">
+    <main className="min-h-screen bg-slate-50">
       
       {/* --- HERO SECTION: SLIGHTLY SMALLER --- */}
       <section className="relative h-[60vh] min-h-[500px] overflow-hidden">
@@ -95,7 +95,7 @@ function Home({ loggedIn, activeSubscription }) {
         </div>
       </section>
 
-      <section className="pb-20">
+      <section className="pb-20 ">
         <NewArrivals />
       </section>
 

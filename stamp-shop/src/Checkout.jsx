@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useLocation } from "react-router-dom";
+//import { useLocation } from "react-router-dom";
 import toast from 'react-hot-toast';
 import { useCart } from './CartContext.jsx';
 
@@ -12,7 +12,7 @@ function Checkout() {
     country: 'Tunisia',
     city: '',
     address: '',
-    postalCode: '',
+    postcode: '',
     paymentMethod: 'E-dinar'
   });
   const [touched, setTouched] = useState({
@@ -22,7 +22,7 @@ function Checkout() {
     email: false,
     city: false,
     address: false,
-    postalCode: false
+    postcode: false
   });
   const [errors, setErrors] = useState({
     firstname: '',
@@ -31,12 +31,12 @@ function Checkout() {
     email: '',
     city: '',
     address: '',
-    postalCode: ''
+    postcode: ''
   });
   const token = localStorage.getItem('token') || sessionStorage.getItem('token');
-  const { state } = useLocation();
-  const cart = state?.cart;
-  const { clearCart } = useCart();
+  // const { state } = useLocation();
+  // const cart = state?.cart;
+  const { cart, clearCart } = useCart();
 
 
   const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -77,10 +77,10 @@ function Checkout() {
       else if (form.city.length < 2) newErrors.city = "City must be at least 2 characters";
       else newErrors.city = "";
     }
-    if (field === "postalCode") {
-      if (!form.postalCode) newErrors.postalCode = "Postal code is required";
-      else if (form.postalCode.length < 4) newErrors.postalCode = "Postal code must be at least 4 characters";
-      else newErrors.postalCode = "";
+    if (field === "postcode") {
+      if (!form.postcode) newErrors.postcode = "Postal code is required";
+      else if (form.postcode.length < 4) newErrors.postcode = "Postal code must be at least 4 characters";
+      else newErrors.postcode = "";
     }
 
     setErrors(newErrors);
@@ -97,6 +97,33 @@ function Checkout() {
       })
       .catch((err) => console.error(err));
   }, []);
+  useEffect(()=>{
+    if(!token) return;
+    const getMe=async()=>{
+      try{
+        const res=await fetch('/api/users/me',{
+          headers: { 'Authorization': 'Bearer ' + token }
+        });
+        if(res.ok){
+          const user=await res.json();
+          setForm(prev => ({
+        ...prev,
+        firstname: user.firstname || '',
+        lastname: user.lastname || '',
+        phone: user.phone || '',
+        email: user.email || '',
+        country: user.country || 'Tunisia',
+        city: user.city || '',
+        address: user.address || '',
+        postcode: user.postcode || ''
+      }));
+        }
+      }catch(err){
+        console.error("Failed to fetch user data.",err);
+      }
+    }
+    getMe();
+  }, [token]);
 
   let subtotal = 0;
   if (cart) {
@@ -121,7 +148,7 @@ function Checkout() {
       form.phone.length >= 8 &&
       form.address.length >= 3 &&
       form.city.length >= 2 &&
-      form.postalCode.length >= 4
+      form.postcode.length >= 4
     );
   }
 
@@ -141,13 +168,14 @@ function Checkout() {
       }
       const payload = {
         customer: {
-          fullName: form.firstName + " " + form.lastName,
+          firstname: form.firstname,
+          lastname: form.lastname,
           phone: form.phone,
           email: form.email,
           country: form.country,
           city: form.city,
           address: form.address,
-          postalCode: form.postalCode,
+          postcode: form.postcode,
         },
         items,
         paymentMethod: form.paymentMethod
@@ -163,7 +191,7 @@ function Checkout() {
       });
       if (res.ok) {
         toast.success("Order placed successfully!");
-        setForm({ fullName: '', phone: '', email: '', country: 'Tunisia', city: '', address: '', postalCode: '' })
+        setForm({ firstname: '', lastname: '', phone: '', email: '', country: 'Tunisia', city: '', address: '', postcode: '' })
         if(cart) clearCart();
       } else {
         const data = await res.json();
@@ -241,16 +269,16 @@ function Checkout() {
                   <label className={labelcss}>First Name *</label>
                   <input 
                     type="text" 
-                    name="firstName" 
-                    value={form.firstName}
+                    name="firstname" 
+                    value={form.firstname}
                     onChange={handleInputChange} 
                     placeholder="Anis"
                     className={inputcss} 
                     required
-                    onBlur={() => errorMsgs("firstName")} 
+                    onBlur={() => errorMsgs("firstname")} 
                   />
-                  {errors.firstName && touched.firstName && (
-                    <p className="text-red-500 text-xs mt-1">{errors.firstName}</p>
+                  {errors.firstname && touched.firstname && (
+                    <p className="text-red-500 text-xs mt-1">{errors.firstname}</p>
                   )}
                 </div>
 
@@ -259,16 +287,16 @@ function Checkout() {
                   <label className={labelcss}>Last Name *</label>
                   <input 
                     type="text" 
-                    name="lastName" 
-                    value={form.lastName}
+                    name="lastname" 
+                    value={form.lastname}
                     onChange={handleInputChange} 
                     placeholder="Kamel"
                     className={inputcss} 
                     required
-                    onBlur={() => errorMsgs("lastName")} 
+                    onBlur={() => errorMsgs("lastname")} 
                   />
-                  {errors.lastName && touched.lastName && (
-                    <p className="text-red-500 text-xs mt-1">{errors.lastName}</p>
+                  {errors.lastname && touched.lastname && (
+                    <p className="text-red-500 text-xs mt-1">{errors.lastname}</p>
                   )}
                 </div>
 
@@ -313,12 +341,12 @@ function Checkout() {
                 </div>
 
                 <div>
-                  <label className={labelcss}>Postal Code *</label>
-                  <input type="text" name="postalCode" value={form.postalCode}
-                    onBlur={() => errorMsgs('postalCode')}
+                  <label className={labelcss}>post Code *</label>
+                  <input type="text" name="postcode" value={form.postcode}
+                    onBlur={() => errorMsgs('postcode')}
                     onChange={handleInputChange} placeholder="1002" className={inputcss} required />
-                  {errors.postalCode && touched.postalCode && (
-                    <p className="text-red-500 text-xs mt-1">{errors.postalCode}</p>
+                  {errors.postcode && touched.postcode && (
+                    <p className="text-red-500 text-xs mt-1">{errors.postcode}</p>
                   )}
                 </div>
 

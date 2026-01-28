@@ -24,8 +24,11 @@ function AdminDash() {
           <NavLink to="contactinbox" className={({isActive})=>`${link} ${isActive ? active : inactive}`}>
             <i className="bi bi-envelope-fill"></i> Contact Inbox
           </NavLink>
+          <NavLink to="userdash" className={({isActive})=>`${link} ${isActive ? active : inactive}`}>
+            <i className="bi bi-people-fill"></i> Users
+          </NavLink>
           <NavLink to="subscriptions" className={({isActive})=>`${link} ${isActive ? active : inactive}`}>
-            <i className="bi bi-people-fill"></i> Subscriptions
+            <i className="bi bi-bookmark-star-fill"></i> Subscriptions
           </NavLink>
            <NavLink to="orderdash" className={({isActive})=>`${link} ${isActive ? active : inactive}`}>
             <i className="bi bi-bag-fill"></i> Orders

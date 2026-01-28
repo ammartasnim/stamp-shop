@@ -6,9 +6,10 @@ function Subscribe({ setSubscribed }) {
     const navigate = useNavigate();
     const [form, setForm] = useState({
         type: "",
+        fund: 0, // Added to match your model
         frequency: "",
         mode: "",
-        products: [] // Array of { cat: string, quantity: number }
+        products: [] // Now a flat array of strings: ["Sports", "Nature"]
     });
 
     const labelClass = "block text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mb-3";
@@ -46,30 +47,22 @@ function Subscribe({ setSubscribed }) {
     }
 
     const categories = [
-        "Arts & Culture", "Famous Figures", "Sports", "Postal / Philately",
+        "Arts & Culture", "Famous Figures", "Sports",
         "Events / International Days", "Nature & Science", "Food & Traditions",
         "Government & History", "Health & Society", "Other"
     ];
 
-    const addCategory = (category) => {
-        setForm(prev => ({
-            ...prev,
-            products: [...prev.products, { category, quantity: 1 }]
-        }));
-    };
-
-    const removeCategory = (category) => {
-        setForm(prev => ({
-            ...prev,
-            products: prev.products.filter(p => p.category !== category)
-        }));
-    };
-
-    const updateQuantity = (category, quantity) => {
-        setForm(prev => ({
-            ...prev,
-            products: prev.products.map(p => p.category === category ? { ...p, quantity } : p)
-        }));
+    // Toggle logic for the "Checkboxes"
+    const toggleCategory = (category) => {
+        setForm(prev => {
+            const isSelected = prev.products.includes(category);
+            return {
+                ...prev,
+                products: isSelected 
+                    ? prev.products.filter(p => p !== category) 
+                    : [...prev.products, category]
+            };
+        });
     };
 
     return (
@@ -98,7 +91,7 @@ function Subscribe({ setSubscribed }) {
                                         className="w-4 h-4 accent-blue-600"
                                         value={value}
                                         checked={form.type === value}
-                                        onChange={(e) => setForm({ ...form, type: e.target.value })}
+                                        onChange={(e) => setForm({ ...form, type: e.target.value, fund: Number(e.target.value) })}
                                     />
                                     <span className="text-sm font-bold text-slate-700">{value},000 TND</span>
                                 </label>
@@ -107,38 +100,24 @@ function Subscribe({ setSubscribed }) {
                     </section>
 
                     <div className="grid md:grid-cols-2 gap-16">
-                        {/* 2. Product Categories */}
+                        {/* 2. Product Categories as Checkboxes */}
                         <section>
                             <label className={labelClass}>Subscription Items *</label>
-                            <div className="space-y-3 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
+                            <div className="space-y-2 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
                                 {categories.map((category) => {
-                                    const selected = form.products.find(p => p.category == category);
+                                    const isSelected = form.products.includes(category);
                                     return (
-                                        <div key={category} className={`flex items-center justify-between p-3 rounded-xl border transition-all ${selected ? 'bg-white border-blue-200 shadow-sm' : 'bg-slate-50 border-transparent'}`}>
-                                            <span className={`text-xs font-bold ${selected ? 'text-slate-900' : 'text-slate-400'}`}>{category}</span>
-
-                                            {selected ? (
-                                                <div className="flex items-center gap-3">
-                                                    <input
-                                                        type="number"
-                                                        min="1"
-                                                        value={selected.quantity}
-                                                        onChange={e => updateQuantity(category, Number(e.target.value))}
-                                                        className="w-14 bg-white border border-slate-200 rounded-lg py-1 text-center text-xs font-bold outline-none focus:border-blue-500"
-                                                    />
-                                                    <button type="button" onClick={() => removeCategory(category)} className="text-red-400 hover:text-red-600 p-1">
-                                                        <i className="bi bi-x-circle-fill"></i>
-                                                    </button>
-                                                </div>
-                                            ) : (
-                                                <button
-                                                    type="button"
-                                                    onClick={() => addCategory(category)}
-                                                    className="text-[10px] font-bold uppercase tracking-widest text-blue-600 hover:text-blue-800"
-                                                >
-                                                    + Add
-                                                </button>
-                                            )}
+                                        <div 
+                                            key={category} 
+                                            onClick={() => toggleCategory(category)}
+                                            className={`flex items-center justify-between p-4 rounded-xl border cursor-pointer transition-all ${isSelected ? 'bg-blue-50 border-blue-200 shadow-sm' : 'bg-slate-50 border-transparent hover:border-slate-200'}`}
+                                        >
+                                            <span className={`text-xs font-bold ${isSelected ? 'text-blue-700' : 'text-slate-500'}`}>
+                                                {category}
+                                            </span>
+                                            <div className={`w-5 h-5 rounded flex items-center justify-center border transition-all ${isSelected ? 'bg-blue-600 border-blue-600 text-white' : 'bg-white border-slate-300'}`}>
+                                                {isSelected && <i className="bi bi-check-lg text-xs font-black"></i>}
+                                            </div>
                                         </div>
                                     );
                                 })}

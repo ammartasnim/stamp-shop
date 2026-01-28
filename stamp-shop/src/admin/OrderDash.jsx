@@ -65,7 +65,7 @@ function OrderDash() {
       <header className="flex justify-between items-center mb-10">
         <div>
           <h2 className="text-3xl font-extrabold text-slate-900 tracking-tight">Order Ledger</h2>
-          <p className="text-slate-500 text-sm mt-1">Manage fulfillment, tracking, and customer shipments.</p>
+          <p className="text-slate-500 text-sm mt-1">Manage fulfillment, tracking, and user shipments.</p>
         </div>
       </header>
 
@@ -85,7 +85,7 @@ function OrderDash() {
             <table className="w-full text-left border-collapse table-auto">
               <thead>
                 <tr className="bg-slate-50/50 border-b border-slate-200">
-                  <th className="pl-8 pr-4 py-5 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Ref ID & Customer</th>
+                  <th className="pl-8 pr-4 py-5 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Ref ID & user</th>
                   <th className="px-4 py-5 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Ship To</th>
                   <th className="px-4 py-5 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Items</th>
                   <th className="px-4 py-5 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Financials</th>
@@ -103,21 +103,21 @@ function OrderDash() {
                         <span onClick={()=>copyToClipboard(order._id.slice(-6).toUpperCase())} className="font-mono text-[9px] font-bold text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded">
                           #{order._id.slice(-6).toUpperCase()}
                         </span>
-                        <span className={`text-[8px] font-black uppercase px-1.5 py-0.5 rounded ${order.user ? 'bg-blue-100 text-blue-600' : 'bg-slate-100 text-slate-500'}`}>
-                          {order.user ? 'Member' : 'Guest'}
+                        <span className={`text-[8px] font-black uppercase px-1.5 py-0.5 rounded ${order.user.role==="guest" ?  'bg-slate-100 text-slate-500' : 'bg-blue-100 text-blue-600' }`}>
+                          {order.user.role}
                         </span>
                       </div>
-                      <div className="font-bold text-slate-900 text-sm leading-tight">{order.customer.fullName}</div>
-                      <div className="text-[11px] text-slate-400 font-medium truncate max-w-[150px]">{order.customer.email}</div>
-                      <div className="text-[11px] text-slate-400 font-medium truncate max-w-[150px]">{order.customer.phone}</div>
+                      <div className="font-bold text-slate-900 text-sm leading-tight">{order.user.fullName}</div>
+                      <div className="text-[11px] text-slate-400 font-medium truncate max-w-[150px]">{order.user.email}</div>
+                      <div className="text-[11px] text-slate-400 font-medium truncate max-w-[150px]">{order.user.phone}</div>
                     </td>
 
                     {/* Shipping Address */}
                     <td className="px-4 py-5">
                       <div className="text-[11px] text-slate-500 leading-relaxed">
-                        <span className="block font-bold text-slate-900 text-[10px] uppercase tracking-wide">{order.customer.city}</span>
-                        {order.customer.address}<br/>
-                        {order.customer.postalCode}
+                        <span className="block font-bold text-slate-900 text-[10px] uppercase tracking-wide">{order.user.city}</span>
+                        {order.user.address}<br/>
+                        {order.user.postalCode}
                       </div>
                     </td>
 
