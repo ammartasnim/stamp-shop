@@ -1,4 +1,5 @@
 const Cart = require('../models/Cart');
+const Stamp = require('../models/Stamp');
 
 exports.getCart=async(req,res)=>{
     try{
@@ -19,19 +20,31 @@ exports.getCart=async(req,res)=>{
 exports.addItem=async(req,res)=>{
     try{
         const { productId, quantity } = req.body;
-        if (!productId || !quantity || quantity <= 0) {
+        if (!productId || !quantity || quantity <= 0 ) {
              return res.status(400).json({ error: 'Invalid product or quantity' });}
-
+        
         let cart=await Cart.findOne({ userId: req.user.userId });
         if(!cart){
             cart=new Cart({ userId: req.user.userId, items: [] });
         }
+        const stamp = await Stamp.findById(productId);
+        if (!stamp) {
+            return res.status(404).json({ error: 'Product not found' });
+        }
+        if (stamp.stock <= 0) {
+            return res.status(400).json({ error: 'Product out of stock' });
+        }
+        const price = stamp.price;
+
         const itemIndex=cart.items.findIndex(item=>item.productId.toString()==productId);
         if(itemIndex>-1){
+            if(cart.items[itemIndex].quantity>=5){
+                return res.status(400).json({ error: 'Maximum quantity for this item reached' });
+            }
             cart.items[itemIndex].quantity+=quantity;
         }
         else{
-            cart.items.push({ productId, quantity });
+            cart.items.push({ productId, quantity, price });
         }
         await cart.save();
         await cart.populate('items.productId');
@@ -45,11 +58,21 @@ exports.updateQuantity=async(req,res)=>{
     try{
         const { productId, quantity: rawQuantity } = req.body;
         const quantity = Number(rawQuantity);
+        if(quantity>5){
+            return res.status(400).json({ error: 'Maximum quantity for this item is 5' });
+        }
         if (!productId || typeof quantity!=='number' || quantity < 0) {
              return res.status(400).json({ error: 'Invalid product or quantity' });}
         const cart=await Cart.findOne({ userId: req.user.userId });
         if(!cart){
             return res.status(404).json({ error: 'Cart not found' });
+        }
+        const stamp = await Stamp.findById(productId);
+        if (!stamp) {
+            return res.status(404).json({ error: 'Product not found' });
+        }
+        if (stamp.stock <= 0) {
+            return res.status(400).json({ error: 'Product out of stock' });
         }
         const itemIndex=cart.items.findIndex(item=>item.productId.toString()==productId);
         if(itemIndex>-1){

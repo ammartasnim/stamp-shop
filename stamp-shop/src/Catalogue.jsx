@@ -5,6 +5,8 @@ import CatalogueMain from './CatalogueMain';
 import CategoryPage from './CategoryPage';
 import StampPage from './StampPage';
 import SearchPage from './SearchPage';
+import FilterStamps from './FilterStamps';  
+import FilteredPage from './FilteredPage';
 
 function Catalogue({ loggedIn, activeSubscription, role }) {
   const [form, setForm] = useState({ search: '' });
@@ -24,6 +26,7 @@ function Catalogue({ loggedIn, activeSubscription, role }) {
   const selectedCategory = searchParams.get('category');
   const selectedStamp = searchParams.get('stampId');
   const query = searchParams.get('query');
+  const filter = searchParams.get('filter');
   // const selectStamp = (stampId) => {
   //   setSearchParams({ category: selectedCategory, stampId: stampId, query: null });
   // }
@@ -117,6 +120,12 @@ function Catalogue({ loggedIn, activeSubscription, role }) {
               onBack={onBack}
               query={query}
             />
+          ) : filter ? (
+            <FilteredPage
+              filter={filter}
+              onSelectStamp={selectStamp}
+              onBack={onBack}
+            />
           ) : query ? (
             <SearchPage
               query={query}
@@ -129,7 +138,7 @@ function Catalogue({ loggedIn, activeSubscription, role }) {
               onSelectStamp={selectStamp}
               onBack={onBack}
             />
-          ) : (
+          ) :  (
             <CatalogueMain onSelectCategory={selectCategory} />
           )}
 
@@ -140,7 +149,7 @@ function Catalogue({ loggedIn, activeSubscription, role }) {
 
         {/* Sidebar Area - Sticky enabled */}
         <div className="w-full md:w-80">
-          <div className="sticky top-8 space-y-12">
+          <div className="sticky top-8 space-y-10">
 
             {/* Search Section */}
             <section>
@@ -157,6 +166,9 @@ function Catalogue({ loggedIn, activeSubscription, role }) {
                   <i className="bi bi-search text-lg"></i>
                 </button>
               </form>
+            <div className='mt-4'>
+              <FilterStamps filter={filter} searchParams={searchParams} setSearchParams={setSearchParams} />
+            </div>
             </section>
 
             {/* ENHANCED ATTRACTIVE SUBSCRIBE SECTION */}

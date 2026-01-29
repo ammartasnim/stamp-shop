@@ -1,7 +1,7 @@
 import React from 'react';
 import { NavLink, Outlet, Link } from 'react-router-dom';
 
-function ProfileLayout() {
+function ProfileLayout({ subscribed }) {
   return (
     <div className="max-w-6xl mx-auto py-16 px-6 animate-in fade-in duration-700">
       {/* Header Section */}
@@ -30,7 +30,7 @@ function ProfileLayout() {
             Order History
           </NavLink>
           <NavLink 
-            to="subscription"
+            to={subscribed? "subscription" : "../subscribe"}
             className={({ isActive }) => 
               `flex-1 md:flex-none px-8 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${isActive ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`
             }

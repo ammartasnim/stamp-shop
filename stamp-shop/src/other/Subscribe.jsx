@@ -31,7 +31,7 @@ function Subscribe({ setSubscribed }) {
             if (res.ok) {
                 toast.success("Subscription successful!");
                 setSubscribed(true);
-                navigate("/subscription");
+                navigate("/profile/subscription");
             } else {
                 const data = await res.json();
                 toast.error("Error: " + data.error);

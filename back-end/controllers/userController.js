@@ -44,14 +44,16 @@ exports.login = async (req, res) => {
             {expiresIn:remember?'7d':'1d'}
         );
 
-        res.json({message:'Login successful', token});
+        res.json({message:'Login successful', token, role: user.role});
     } catch (err){res.status(500).json({ error: err.message }); }
 }
 
 
 exports.getAllUsers = async (req, res) => {
     try {
-        const users=await User.find();
+        const users = await User.find({
+         role: { $ne: 'admin' }
+        }).select('-password').sort({ createdAt: -1 });
         res.json(users);
     } catch (err){
         res.status(500).json({ error: err.message });

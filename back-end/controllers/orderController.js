@@ -2,22 +2,25 @@ const Order = require('../models/Order');
 const Stamp = require('../models/Stamp');
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
+const Cart = require('../models/Cart');
 
 exports.createOrder=async(req,res)=>{
     try{
-        const { customer, items, paymentMethod } = req.body;
+        const { customer, items: guestItems, paymentMethod } = req.body;
         let userId=null;
+        let isGuest=true;
         const authHeader = req.headers.authorization;
         if (authHeader && authHeader.startsWith('Bearer ')) {
             const token = authHeader.split(' ')[1];
             try {
                 const decoded = jwt.verify(token, process.env.JWT_SECRET);
                 userId = decoded.userId;
+                isGuest=false;
             } catch (err) {
             console.log('Invalid token:', err.message);
             }
         }
-        if (userId) {
+        if (!isGuest && userId) {
       // 2️⃣ Logged-in user: fetch their info
       const existingUser = await User.findById(userId);
 
@@ -47,28 +50,56 @@ exports.createOrder=async(req,res)=>{
       });
       await guestUser.save();
       userId = guestUser._id;
-    }
-        if(!items || items.length==0){
+     }
+    
+    let items;
+    if(!isGuest){
+        const cart=await Cart.findOne({ userId }).populate('items.productId');
+        if(!cart || cart.items.length==0){
+            return res.status(400).json({message:'Cart is empty'});
+        }
+        items=cart.items.map(item=>({
+            product: item.productId._id,
+            price:item.price,
+            quantity:item.quantity
+        }));
+    }else{
+        if(!guestItems || guestItems.length==0){
             return res.status(400).json({message:'Order must contain at least one item'});
         }
-        let totalPrice=0;
+        items=guestItems;
+    }
+
+      let totalPrice=0;
         const orderItems=[];
+
         for(const item of items){
-            const stamp=await Stamp.findById(item.product);
+            const productId=item.productId || item.product;
+            const stamp=await Stamp.findById(productId);
             if(!stamp){
-                return res.status(404).json({message:`Product with id ${item.product} not found`});
+                return res.status(404).json({message:`Product with id ${productId} not found`});
             }
-            totalPrice+=stamp.price*item.quantity;
+            if(stamp.stock<item.quantity){
+                return res.status(400).json({message:`Insufficient stock for product ${stamp.name}`});
+            }
+            stamp.stock-=item.quantity;
+            await stamp.save();
+            const itemPrice = item.price || stamp.price;
+            totalPrice+=itemPrice*item.quantity;
             orderItems.push({
                 product: stamp._id,
-                price: stamp.price,
+                price: itemPrice,
                 quantity: item.quantity
             });
         }
+
         const order= new Order({
             user:userId, items: orderItems, totalPrice, paymentMethod, status: paymentMethod=="E-dinar" ? 'Pending':'Created'
         });
         await order.save();
+        if(!isGuest){
+            await Cart.findOneAndUpdate({ userId }, { items: [] });
+        }
         res.status(201).json(order);
     }catch(err){
         res.status(500).json({ error: err.message });
@@ -77,15 +108,25 @@ exports.createOrder=async(req,res)=>{
 
 exports.cancelOrder=async(req,res)=>{
     try{
-        if(!order.user){
-            return res.status(403).json({ message: 'Guest orders cannot be cancelled online. Please contact support.' });
-        }
         const order=await Order.findById(req.params.id);
+        if(!order.user){
+            return res.status(403).json({ message: 'Guest orders cannot be cancelled. Please contact support.' });
+        }
         if(!order){
             return res.status(404).json({message:'Order not found'});
         }
         if(order.status=='Delivered'){
             return res.status(400).json({message:'Delivered orders cannot be cancelled'});
+        }
+        if (order.status === 'Cancelled') {
+            return res.status(400).json({ message: 'Order already cancelled' });
+        }
+        for(const item of order.items){
+            const stamp=await Stamp.findById(item.product);
+            if(stamp){
+                stamp.stock+=item.quantity;
+                await stamp.save();
+            }
         }
         order.status='Cancelled';
         await order.save();

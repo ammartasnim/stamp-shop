@@ -13,7 +13,7 @@ export function NewArrivals() {
     fetch('/api/stamps')
       .then(res => res.json())
       .then(data => {
-        setStamps(data);
+        setStamps(data.slice(0,4));
         setLoading(false);
       })
       .catch(err => {
@@ -26,9 +26,9 @@ export function NewArrivals() {
   const query = " ";
   Navigate(`/catalogue?query=${query}&stampId=${stampId}`);
 };
-    const onAddToCart = (e,stampId) => {
+    const onAddToCart = (e,stampId, price) => {
       e.stopPropagation();
-      addItem(stampId, 1);
+      addItem(stampId, 1, price);
     }
   
 
@@ -87,7 +87,7 @@ export function NewArrivals() {
 
                 {/* Compact Button */}
                 <button 
-                onClick={(e)=>onAddToCart(e, stamp._id)}
+                onClick={(e)=>onAddToCart(e, stamp._id, stamp.price)}
                 className="w-full bg-slate-900 text-white py-3 rounded-xl text-[9px] font-black uppercase tracking-[0.15em] transition-all duration-300 hover:bg-blue-600 active:scale-[0.95] flex items-center justify-center gap-2">
                   Add <i className="bi bi-cart-plus text-xs"></i>
                 </button>

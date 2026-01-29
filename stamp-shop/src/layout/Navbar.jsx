@@ -8,7 +8,7 @@ import toast from "react-hot-toast";
 import { useState, useRef, useEffect } from "react";
 
 
-function Navbar({ loggedIn, setLoggedIn, role, subscribed, activeSubscription, showNewsletter, setShowNewsletter }) {
+function Navbar({ loggedIn, setLoggedIn, role, showNewsletter, setShowNewsletter, username }) {
   const navigate=useNavigate();
   const logout=()=>{
     localStorage.removeItem('token');
@@ -33,7 +33,7 @@ function Navbar({ loggedIn, setLoggedIn, role, subscribed, activeSubscription, s
       document.removeEventListener("mousedown", onClickOutside);
     }
   },[openCart]);
-  const username="John Doe"; // Replace with actual username logic
+
   const getUserInitials = () => {
     if (!username) return "U";
     return username.charAt(0).toUpperCase();

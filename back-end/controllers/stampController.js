@@ -40,7 +40,7 @@ exports.createStamp = async (req, res) => {
     console.log('req.file:', req.file);
     console.log('req.body:', req.body);
     try {
-        const { name, category, price, stock, issueDate, isArchived } = req.body;
+        const { name, description, category, price, stock, issueDate, isArchived } = req.body;
         if(!req.file){
             return res.status(400).json({ error: 'Image file is required' });
         }
@@ -48,7 +48,7 @@ exports.createStamp = async (req, res) => {
         if (existingStamp){
             return res.status(409).json({ error: 'Stamp already exists' });
         }
-        const stamp=await Stamp.create({name, image: req.file.filename, category, price:parseFloat(price), stock:parseInt(stock) || 0, issueDate:issueDate || null, isArchived: isArchived === 'true'
+        const stamp=await Stamp.create({name, description, image: req.file.filename, category, price:parseFloat(price), stock:parseInt(stock) || 0, issueDate:issueDate || null, isArchived: isArchived === 'true'
 
         });
         res.status(201).json({ message: 'Stamp created', stamp });
@@ -107,6 +107,22 @@ exports.searchStamps=async(req,res)=>{
         const stamps = await Stamp.find({
             name: { $regex: query, $options: 'i' },
             isArchived: false
+        })
+        res.status(200).json(stamps);
+    }catch(err){
+        res.status(500).json({ error: err.message });
+    }
+}
+
+exports.filterStamps=async(req,res)=>{
+    try{
+        const { filter }=req.query;
+        if(!filter){
+            return res.status(400).json({ error: 'Filter parameter is required' });
+        }
+        let stamps=await Stamp.find({
+            isArchived: false,
+            description: { $regex: filter, $options: 'i' }
         })
         res.status(200).json(stamps);
     }catch(err){

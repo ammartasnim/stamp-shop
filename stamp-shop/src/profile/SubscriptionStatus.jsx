@@ -3,13 +3,14 @@ import { format } from 'date-fns';
 import { Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
 
-function SubscriptionStatus({ setSubscribed }) {
+function SubscriptionStatus() {
   const [subscription, setSubscription] = useState(null);
   const [loading, setLoading] = useState(false);
 
   const token = localStorage.getItem('token') || sessionStorage.getItem('token');
   
   useEffect(() => {
+    
     setLoading(true);
     fetch("/api/subscriptions/me", {
       headers: { Authorization: 'Bearer ' + token }

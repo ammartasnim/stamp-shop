@@ -4,16 +4,19 @@ import { useCart } from './CartContext.jsx'
 
 function Cart() {
   const { cart, removeItem, clearCart, loading, updateQuantity } = useCart();
-  
+
   // Calculate total
-  const total = cart.reduce((sum, item) => 
+  const total = cart.reduce((sum, item) =>
     sum + (item.productId.price * item.quantity), 0
   );
 
+  const max = 5;
   const decreaseQuantity = (productId, currentQuantity) => {
+    if (currentQuantity <= 1) return;
     updateQuantity(productId, currentQuantity - 1);
   };
   const increaseQuantity = (productId, currentQuantity) => {
+    if (currentQuantity >= max) return;
     updateQuantity(productId, currentQuantity + 1);
   }
 
@@ -44,13 +47,13 @@ function Cart() {
       ) : cart.length === 0 ? (
         <div className="flex flex-col items-center text-center py-8">
           <div className="bg-slate-50 rounded-full p-4 mb-3">
-            <i className="bi bi-box-seam text-slate-300" style={{fontSize: '32px'}}></i>
+            <i className="bi bi-box-seam text-slate-300" style={{ fontSize: '32px' }}></i>
           </div>
           <h3 className="text-slate-900 font-semibold text-sm mb-1">Cart is empty</h3>
           <p className="text-slate-500 text-xs leading-relaxed mb-4 max-w-xs">
             Add stamps to your cart
           </p>
-          <Link 
+          <Link
             to="/catalogue"
             className="no-underline inline-flex items-center justify-center gap-2 bg-blue-600 text-white py-2 px-4 rounded-md text-xs font-semibold hover:bg-blue-700 transition-all duration-300 shadow-sm active:scale-[0.98]"
           >
@@ -63,14 +66,14 @@ function Cart() {
           {/* Cart Items */}
           <div className="flex flex-col gap-2 max-h-64 overflow-y-auto">
             {cart.map((item) => (
-              <div 
-                key={item.productId._id} 
+              <div
+                key={item.productId._id}
                 className="flex items-center gap-2 p-2 rounded-md border border-slate-100 hover:border-slate-200 hover:shadow-sm transition-all duration-200"
               >
                 {/* Product Image */}
                 <div className="w-12 h-12 bg-slate-50 rounded flex items-center justify-center overflow-hidden flex-shrink-0">
-                  <img 
-                    src={`/uploads/${item.productId.image}`} 
+                  <img
+                    src={`/uploads/${item.productId.image}`}
                     alt={item.productId.name}
                     className="max-w-full max-h-full object-contain"
                   />
@@ -91,7 +94,7 @@ function Cart() {
                   <button
                     onClick={() => decreaseQuantity(item.productId._id, item.quantity)}
                     className="w-5 h-5 flex items-center justify-center text-slate-600 hover:text-slate-900 hover:bg-slate-200 rounded transition-all"
-                    aria-label="Decrease quantity"
+                    title="Decrease quantity"
                   >
                     <i className="bi bi-dash text-sm"></i>
                   </button>
@@ -100,13 +103,18 @@ function Cart() {
                   </span>
                   <button
                     onClick={() => increaseQuantity(item.productId._id, item.quantity)}
-                    className="w-5 h-5 flex items-center justify-center text-slate-600 hover:text-slate-900 hover:bg-slate-200 rounded transition-all"
-                    aria-label="Increase quantity"
+                    disabled={item.quantity >= max}
+                    className={`w-5 h-5 flex items-center justify-center rounded transition-all
+                        ${item.quantity >= 5
+                        ? 'text-slate-300 cursor-not-allowed'
+                        : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200'}
+                        `}
+                    title="Increase quantity"
                   >
                     <i className="bi bi-plus text-sm"></i>
                   </button>
+                  
                 </div>
-
                 {/* Price */}
                 <div className="text-right min-w-[60px]">
                   <p className="text-slate-900 font-bold text-xs">
@@ -116,8 +124,8 @@ function Cart() {
                 </div>
 
                 {/* Remove Button */}
-                <button 
-                  onClick={() => removeItem(item.productId._id)} 
+                <button
+                  onClick={() => removeItem(item.productId._id)}
                   className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded transition-all duration-200"
                   aria-label="Remove item"
                 >
@@ -145,8 +153,8 @@ function Cart() {
               >
                 Checkout
               </Link>
-              <button 
-                onClick={clearCart} 
+              <button
+                onClick={clearCart}
                 className="w-full flex items-center justify-center gap-2 bg-white text-red-600 border border-red-200 py-2 px-4 rounded-md text-xs font-semibold hover:bg-red-50 hover:border-red-300 transition-all duration-300 active:scale-[0.98]"
               >
                 <i className="bi bi-trash3"></i>

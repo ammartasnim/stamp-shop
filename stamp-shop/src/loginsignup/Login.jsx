@@ -44,7 +44,11 @@ function Login({ setLoggedIn }) {
         updateToken();
         await getCart();
         toast.success("Login successful!");
-        navigate("/home");
+        if (data.role === 'admin') {
+        navigate('/admindash');
+      } else {
+        navigate('/home');
+      }
       } else {
         toast.error("Error: " + data.message);
       }

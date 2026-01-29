@@ -153,20 +153,11 @@ function Checkout() {
   }
 
   const onSubmit = async () => {
-    try {
-      console.log(form);
-      let items=[];
-      if(cart && cart.length>0){
-        items= cart.map(item => ({
-          product: item.productId._id,
-          quantity: item.quantity
-        }));
-      }
-      if(!items.length){
-        toast.error("No items to checkout.");
-        return;
-      }
-      const payload = {
+    if(!cart || cart.length===0){
+      toast.error("Your cart is empty.");
+      return;
+    }
+    const orderData={
         customer: {
           firstname: form.firstname,
           lastname: form.lastname,
@@ -177,17 +168,37 @@ function Checkout() {
           address: form.address,
           postcode: form.postcode,
         },
-        items,
         paymentMethod: form.paymentMethod
       };
+      if(!token){
+        orderData.items = cart.map(item=>({
+          productId: item.productId._id,
+          quantity:item.quantity,
+          price:item.productId.price
+      }))}
+    const headers={ 'Content-Type': 'application/json' };
+    if(token){
+      headers['Authorization']='Bearer ' + token;
+    }
 
+    try {
+      // console.log(form);
+      // let items=[];
+      // if(cart && cart.length>0){
+      //   items= cart.map(item => ({
+      //     product: item.productId._id,
+      //     price: item.productId.price,
+      //     quantity: item.quantity
+      //   }));
+      // }
+      // if(!items.length){
+      //   toast.error("No items to checkout.");
+      //   return;
+      // }
       const res = await fetch('/api/orders', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer ' + token
-        },
-        body: JSON.stringify(payload)
+        headers: headers,
+        body: JSON.stringify(orderData)
       });
       if (res.ok) {
         toast.success("Order placed successfully!");

@@ -1,10 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { format } from 'date-fns';
 import toast from 'react-hot-toast';
+import Pagination from '../layout/Pagination';
 
 function OrderDash() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   const token = localStorage.getItem('token') || sessionStorage.getItem('token');
 
@@ -24,6 +27,11 @@ function OrderDash() {
         setLoading(false);
       });
   }, [token]);
+
+  // Pagination calculations
+  const totalPages = Math.ceil(orders.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const currentOrders = orders.slice(startIndex, startIndex + itemsPerPage);
 
   const updateStatus = async (orderId, newStatus) => {
     try {
@@ -81,105 +89,113 @@ function OrderDash() {
             <p className="text-slate-500 font-light">No orders found.</p>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse table-auto">
-              <thead>
-                <tr className="bg-slate-50/50 border-b border-slate-200">
-                  <th className="pl-8 pr-4 py-5 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Ref ID & user</th>
-                  <th className="px-4 py-5 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Ship To</th>
-                  <th className="px-4 py-5 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Items</th>
-                  <th className="px-4 py-5 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Financials</th>
-                  <th className="px-4 py-5 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-center">Date</th>
-                  <th className="pr-8 pl-4 py-5 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-right">Management</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {orders.map((order) => (
-                  <tr key={order._id} className="hover:bg-slate-50/50 transition-colors group align-top">
-                    
-                    {/* ID & Profile */}
-                    <td className="pl-8 pr-4 py-5">
-                      <div className="flex items-center gap-2 mb-1.5">
-                        <span onClick={()=>copyToClipboard(order._id.slice(-6).toUpperCase())} className="font-mono text-[9px] font-bold text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded">
-                          #{order._id.slice(-6).toUpperCase()}
-                        </span>
-                        <span className={`text-[8px] font-black uppercase px-1.5 py-0.5 rounded ${order.user.role==="guest" ?  'bg-slate-100 text-slate-500' : 'bg-blue-100 text-blue-600' }`}>
-                          {order.user.role}
-                        </span>
-                      </div>
-                      <div className="font-bold text-slate-900 text-sm leading-tight">{order.user.fullName}</div>
-                      <div className="text-[11px] text-slate-400 font-medium truncate max-w-[150px]">{order.user.email}</div>
-                      <div className="text-[11px] text-slate-400 font-medium truncate max-w-[150px]">{order.user.phone}</div>
-                    </td>
-
-                    {/* Shipping Address */}
-                    <td className="px-4 py-5">
-                      <div className="text-[11px] text-slate-500 leading-relaxed">
-                        <span className="block font-bold text-slate-900 text-[10px] uppercase tracking-wide">{order.user.city}</span>
-                        {order.user.address}<br/>
-                        {order.user.postalCode}
-                      </div>
-                    </td>
-
-                    {/* Manifest (Items Detail) */}
-                    <td className="px-4 py-5">
-                      <div className="space-y-2">
-                        {order.items.map((item, idx) => (
-                          <div key={idx} className="flex flex-col border-b border-slate-50 last:border-0 pb-1">
-                            <span className="text-[11px] font-bold text-slate-700 leading-tight uppercase">
-                              {item.product?.name || 'Stamp Item'} 
-                              <span className="text-blue-500 ml-1">x{item.quantity}</span>
-                            </span>
-                            <span className="text-[9px] text-slate-400 font-medium">
-                              {item.price.toFixed(3)} TND / unit
-                            </span>
-                          </div>
-                        ))}
-                      </div>
-                    </td>
-
-                    {/* Financials */}
-                    <td className="px-4 py-5">
-                      <div className="text-sm font-bold text-slate-900">{order.totalPrice.toFixed(3)} TND</div>
-                      <div className="text-[10px] text-slate-400 font-medium uppercase tracking-tighter mb-1">{order.paymentMethod}</div>
-                      <div className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[9px] font-bold border ${order.paid ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-slate-50 text-slate-400 border-slate-100'}`}>
-                        <div className={`w-1 h-1 rounded-full ${order.paid ? 'bg-emerald-500 animate-pulse' : 'bg-slate-300'}`}></div>
-                        {order.paid ? 'Paid' : 'Unpaid'}
-                      </div>
-                    </td>
-
-                    {/* Date */}
-                    <td className="pr-8 pl-4 py-5 text-right">
-                      <div className="text-[11px] font-bold text-slate-500 whitespace-nowrap">
-                        {format(new Date(order.createdAt), 'dd MMM, yyyy')}
-                      </div>
-                      <div className="text-[10px] text-slate-300 font-mono">
-                        {format(new Date(order.createdAt), 'HH:mm')}
-                      </div>
-                    </td>
-
-                    {/* Status Select */}
-                    <td className="px-4 py-5 text-center">
-                      <div className="relative inline-block">
-                        <select 
-                          value={order.status}
-                          onChange={(e) => updateStatus(order._id, e.target.value)}
-                          className={`appearance-none text-center pl-3 pr-8 py-1.5 rounded-xl text-[10px] font-bold uppercase tracking-wider border-2 cursor-pointer transition-all focus:outline-none ${getStatusStyle(order.status)}`}
-                        >
-                          <option value="Created">Created</option>
-                          <option value="Pending">Pending</option>
-                          <option value="Paid">Paid</option>
-                          <option value="Delivered">Delivered</option>
-                          <option value="Cancelled">Cancelled</option>
-                        </select>
-                        <i className="bi bi-chevron-down absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none text-[8px] opacity-50"></i>
-                      </div>
-                    </td>
+          <>
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse table-auto">
+                <thead>
+                  <tr className="bg-slate-50/50 border-b border-slate-200">
+                    <th className="pl-8 pr-4 py-5 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Ref ID & user</th>
+                    <th className="px-4 py-5 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Ship To</th>
+                    <th className="px-4 py-5 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Items</th>
+                    <th className="px-4 py-5 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Financials</th>
+                    <th className="px-4 py-5 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-center">Date</th>
+                    <th className="pr-8 pl-4 py-5 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-right">Management</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {currentOrders.map((order) => (
+                    <tr key={order._id} className="hover:bg-slate-50/50 transition-colors group align-top">
+                      
+                      {/* ID & Profile */}
+                      <td className="pl-8 pr-4 py-5">
+                        <div className="flex items-center gap-2 mb-1.5">
+                          <span onClick={()=>copyToClipboard(order._id.slice(-6).toUpperCase())} className="font-mono text-[9px] font-bold text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded cursor-pointer hover:bg-slate-200">
+                            #{order._id.slice(-6).toUpperCase()}
+                          </span>
+                          <span className={`text-[8px] font-black uppercase px-1.5 py-0.5 rounded ${order.user.role==="guest" ?  'bg-slate-100 text-slate-500' : 'bg-blue-100 text-blue-600' }`}>
+                            {order.user.role}
+                          </span>
+                        </div>
+                        <div className="font-bold text-slate-900 text-sm leading-tight">{order.user.fullName}</div>
+                        <div className="text-[11px] text-slate-400 font-medium truncate max-w-[150px]">{order.user.email}</div>
+                        <div className="text-[11px] text-slate-400 font-medium truncate max-w-[150px]">{order.user.phone}</div>
+                      </td>
+
+                      {/* Shipping Address */}
+                      <td className="px-4 py-5">
+                        <div className="text-[11px] text-slate-500 leading-relaxed">
+                          <span className="block font-bold text-slate-900 text-[10px] uppercase tracking-wide">{order.user.city}</span>
+                          {order.user.address}<br/>
+                          {order.user.postalCode}
+                        </div>
+                      </td>
+
+                      {/* Manifest (Items Detail) */}
+                      <td className="px-4 py-5">
+                        <div className="space-y-2">
+                          {order.items.map((item, idx) => (
+                            <div key={idx} className="flex flex-col border-b border-slate-50 last:border-0 pb-1">
+                              <span className="text-[11px] font-bold text-slate-700 leading-tight uppercase">
+                                {item.product?.name || 'Stamp Item'} 
+                                <span className="text-blue-500 ml-1">x{item.quantity}</span>
+                              </span>
+                              <span className="text-[9px] text-slate-400 font-medium">
+                                {item.price.toFixed(3)} TND / unit
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      </td>
+
+                      {/* Financials */}
+                      <td className="px-4 py-5">
+                        <div className="text-sm font-bold text-slate-900">{order.totalPrice.toFixed(3)} TND</div>
+                        <div className="text-[10px] text-slate-400 font-medium uppercase tracking-tighter mb-1">{order.paymentMethod}</div>
+                        <div className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[9px] font-bold border ${order.paid ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-slate-50 text-slate-400 border-slate-100'}`}>
+                          <div className={`w-1 h-1 rounded-full ${order.paid ? 'bg-emerald-500 animate-pulse' : 'bg-slate-300'}`}></div>
+                          {order.paid ? 'Paid' : 'Unpaid'}
+                        </div>
+                      </td>
+
+                      {/* Date */}
+                      <td className="pr-8 pl-4 py-5 text-right">
+                        <div className="text-[11px] font-bold text-slate-500 whitespace-nowrap">
+                          {format(new Date(order.createdAt), 'dd MMM, yyyy')}
+                        </div>
+                        <div className="text-[10px] text-slate-300 font-mono">
+                          {format(new Date(order.createdAt), 'HH:mm')}
+                        </div>
+                      </td>
+
+                      {/* Status Select */}
+                      <td className="px-4 py-5 text-center">
+                        <div className="relative inline-block">
+                          <select 
+                            value={order.status}
+                            onChange={(e) => updateStatus(order._id, e.target.value)}
+                            className={`appearance-none text-center pl-3 pr-8 py-1.5 rounded-xl text-[10px] font-bold uppercase tracking-wider border-2 cursor-pointer transition-all focus:outline-none ${getStatusStyle(order.status)}`}
+                          >
+                            <option value="Created">Created</option>
+                            <option value="Pending">Pending</option>
+                            <option value="Paid">Paid</option>
+                            <option value="Delivered">Delivered</option>
+                            <option value="Cancelled">Cancelled</option>
+                          </select>
+                          <i className="bi bi-chevron-down absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none text-[8px] opacity-50"></i>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            <Pagination 
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={setCurrentPage}
+            />
+          </>
         )}
       </div>
 
