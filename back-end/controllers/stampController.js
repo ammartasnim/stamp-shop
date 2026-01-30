@@ -2,26 +2,41 @@ const Stamp = require('../models/Stamp');
 
 exports.getAllStamps=async(req,res)=>{
     try{
-        const stamps=await Stamp.find().sort({ createdAt: -1 });
+        const userRole=req.user ? req.user.role : 'guest';
+        const { category, filter, query, role }=req.query;
+        let mainFilter={  };
+        if(userRole !== 'admin'){
+            mainFilter.isArchived=false;
+        }
+        if(category){
+            mainFilter.category=category;
+        }
+        if(query){
+            mainFilter.name={ $regex: query, $options: 'i' };
+        }
+        if(filter){
+            mainFilter.description={ $regex: filter, $options: 'i' };
+        }
+        const stamps=await Stamp.find(mainFilter).sort({ createdAt: -1 });
         res.status(200).json(stamps);
     }catch(err){
         res.status(500).json({ error: err.message });
     }
 }
 
-exports.getStampsByCategory = async (req, res) => {
-    try { 
-        const { category } = req.query;
-        if (!category){
-            return res.status(200).json([]);
-        }
-        const stamps=await Stamp.find({ category , isArchived: false });
-        res.status(200).json(stamps);
-    }catch(err){
-        console.log(err);
-        res.status(500).json({ error: err.message });
-    }
-}
+// exports.getStampsByCategory = async (req, res) => {
+//     try { 
+//         const { category } = req.query;
+//         if (!category){
+//             return res.status(200).json([]);
+//         }
+//         const stamps=await Stamp.find({ category , isArchived: false });
+//         res.status(200).json(stamps);
+//     }catch(err){
+//         console.log(err);
+//         res.status(500).json({ error: err.message });
+//     }
+// }
 
 exports.getStampById = async (req, res) => {
     try {
@@ -98,37 +113,37 @@ exports.setArchiveStatus = async (req, res) => {
 //     }
 // }
 
-exports.searchStamps=async(req,res)=>{
-    try{
-        const { query }=req.query;
-        if(!query){
-            return res.status(400).json({ error: 'Query parameter is required' });}
-        console.log('Search query:', query);
-        const stamps = await Stamp.find({
-            name: { $regex: query, $options: 'i' },
-            isArchived: false
-        })
-        res.status(200).json(stamps);
-    }catch(err){
-        res.status(500).json({ error: err.message });
-    }
-}
+// exports.searchStamps=async(req,res)=>{
+//     try{
+//         const { query }=req.query;
+//         if(!query){
+//             return res.status(400).json({ error: 'Query parameter is required' });}
+//         console.log('Search query:', query);
+//         const stamps = await Stamp.find({
+//             name: { $regex: query, $options: 'i' },
+//             isArchived: false
+//         })
+//         res.status(200).json(stamps);
+//     }catch(err){
+//         res.status(500).json({ error: err.message });
+//     }
+// }
 
-exports.filterStamps=async(req,res)=>{
-    try{
-        const { filter }=req.query;
-        if(!filter){
-            return res.status(400).json({ error: 'Filter parameter is required' });
-        }
-        let stamps=await Stamp.find({
-            isArchived: false,
-            description: { $regex: filter, $options: 'i' }
-        })
-        res.status(200).json(stamps);
-    }catch(err){
-        res.status(500).json({ error: err.message });
-    }
-}
+// exports.filterStamps=async(req,res)=>{
+//     try{
+//         const { filter }=req.query;
+//         if(!filter){
+//             return res.status(400).json({ error: 'Filter parameter is required' });
+//         }
+//         let stamps=await Stamp.find({
+//             isArchived: false,
+//             description: { $regex: filter, $options: 'i' }
+//         })
+//         res.status(200).json(stamps);
+//     }catch(err){
+//         res.status(500).json({ error: err.message });
+//     }
+// }
 
 exports.updateStock = async (req, res) => {
     try {

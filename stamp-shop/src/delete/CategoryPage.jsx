@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { useCart } from './CartContext.jsx';
+import { useCart } from '../CartContext.jsx';
 import toast from 'react-hot-toast';
-import Pagination from './layout/Pagination';
+import Pagination from '../layout/Pagination.jsx';
 
 function CategoryPage({ category, onSelectStamp, onBack }) {
   const [stamps, setStamps] = useState([]);

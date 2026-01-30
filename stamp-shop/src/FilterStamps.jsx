@@ -9,8 +9,6 @@ function FilterStamps({ searchParams, setSearchParams }) {
         params.delete('filter');
       } else {
         params.set('filter', filterValue);
-        params.delete('query');
-        params.delete('stampId');
       }
       return params;
     });

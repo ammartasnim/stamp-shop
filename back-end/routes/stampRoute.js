@@ -11,9 +11,9 @@ router.post('/',auth,role('admin'), upload.single('image'), stampController.crea
 router.patch('/:id',auth,role('admin'), stampController.setArchiveStatus);
 router.patch('/:id/stock',auth,role('admin'), stampController.updateStock);
 // router.patch('/unarchive/:id',auth,role('admin'), stampController.unarchiveStamp);
-router.get('/category', stampController.getStampsByCategory);
-router.get('/search',stampController.searchStamps);
-router.get('/filter', stampController.filterStamps);
+// router.get('/category', stampController.getStampsByCategory);
+// router.get('/search',stampController.searchStamps);
+// router.get('/filter', stampController.filterStamps);
 router.get('/:id', stampController.getStampById);
 router.get('/', stampController.getAllStamps);
 

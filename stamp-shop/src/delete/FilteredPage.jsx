@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useCart } from './CartContext.jsx';
+import { useCart } from '../CartContext.jsx';
 
 function FilteredPage({ filter, onSelectStamp, onBack }) {
     const [stamps, setStamps] = useState([]);

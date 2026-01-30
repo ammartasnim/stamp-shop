@@ -24,7 +24,7 @@ function StampDash() {
   const fetchStamps = async () => {
     setLoading(true);
     try {
-      const res = await fetch("/api/stamps");
+      const res = await fetch("/api/stamps?role=admin");
       const data = await res.json();
       const stampsWithInput = data.map(s => ({ ...s, tempStock: s.stock }));
       setStamps(stampsWithInput);

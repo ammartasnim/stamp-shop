@@ -25,7 +25,7 @@ function Login({ setLoggedIn }) {
 
   const onSubmit = async (e) => {
     e.preventDefault();
-    if (!validForm) return;
+    if (!validForm()) return;
     try {
       const res = await fetch('/api/users/login', {
         method: 'POST',

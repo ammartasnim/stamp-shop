@@ -2,11 +2,12 @@ import React, { useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import News from './other/News';
 import CatalogueMain from './CatalogueMain';
-import CategoryPage from './CategoryPage';
+import CategoryPage from './delete/CategoryPage.jsx';
 import StampPage from './StampPage';
-import SearchPage from './SearchPage';
-import FilterStamps from './FilterStamps';  
-import FilteredPage from './FilteredPage';
+import SearchPage from './delete/SearchPage.jsx';
+import FilterStamps from './FilterStamps';
+import FilteredPage from './delete/FilteredPage.jsx';
+import StampGrid from './StampGrid.jsx';
 
 function Catalogue({ loggedIn, activeSubscription, role }) {
   const [form, setForm] = useState({ search: '' });
@@ -114,31 +115,20 @@ function Catalogue({ loggedIn, activeSubscription, role }) {
           {selectedStamp ? (
             <StampPage
               stampId={selectedStamp}
-              onSelectStamp={selectStamp} 
+              onSelectStamp={selectStamp}
               onBacktoCategory={onBacktoCategory}
               role={role}
               onBack={onBack}
-              query={query}
             />
-          ) : filter ? (
-            <FilteredPage
+          ) : (query || selectedCategory || filter) ? (
+            <StampGrid
+              query={query}
+              category={selectedCategory}
               filter={filter}
               onSelectStamp={selectStamp}
-              onBack={onBack}
+              onBack={onBack} // Uses your existing goBack function
             />
-          ) : query ? (
-            <SearchPage
-              query={query}
-              onSelectStamp={selectStamp}
-              onBack={onBack}
-            />
-          ) : selectedCategory ? (
-            <CategoryPage
-              category={selectedCategory}
-              onSelectStamp={selectStamp}
-              onBack={onBack}
-            />
-          ) :  (
+          ) : (
             <CatalogueMain onSelectCategory={selectCategory} />
           )}
 
@@ -166,9 +156,9 @@ function Catalogue({ loggedIn, activeSubscription, role }) {
                   <i className="bi bi-search text-lg"></i>
                 </button>
               </form>
-            <div className='mt-4'>
-              <FilterStamps filter={filter} searchParams={searchParams} setSearchParams={setSearchParams} />
-            </div>
+              <div className='mt-4'>
+                <FilterStamps filter={filter} searchParams={searchParams} setSearchParams={setSearchParams} />
+              </div>
             </section>
 
             {/* ENHANCED ATTRACTIVE SUBSCRIBE SECTION */}
